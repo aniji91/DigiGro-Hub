@@ -12,6 +12,6 @@
     "db:migrate": "cd backend && node scripts/migrate-to-mysql.js"
   },
   "engines": {
-    "node": "20.x"
+    "node": ">=18"
   }
 }
