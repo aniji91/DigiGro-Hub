@@ -4,7 +4,7 @@ const ENSURE_TABLE_SQL = `CREATE TABLE IF NOT EXISTS leave_allocations (
   id INT NOT NULL PRIMARY KEY,
   employee_id INT NOT NULL,
   employee_name VARCHAR(200) NOT NULL,
-  year INT NOT NULL,
+  \`year\` INT NOT NULL,
   annual_leave INT NOT NULL DEFAULT 0,
   sick_leave INT NOT NULL DEFAULT 0,
   personal_leave INT NOT NULL DEFAULT 0,
@@ -12,15 +12,26 @@ const ENSURE_TABLE_SQL = `CREATE TABLE IF NOT EXISTS leave_allocations (
   notes TEXT NULL,
   created_at DATETIME NULL,
   updated_at DATETIME NULL,
-  UNIQUE KEY uk_leave_allocations_employee_year (employee_id, year),
-  INDEX idx_leave_allocations_year (year),
+  UNIQUE KEY uk_leave_allocations_employee_year (employee_id, \`year\`),
+  INDEX idx_leave_allocations_year (\`year\`),
   INDEX idx_leave_allocations_employee_id (employee_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`;
 
 let tableReady = false;
+let migrationDone = false;
 
 async function ensureTable() {
   const pool = getPool();
+  try {
+    await pool.query("SELECT 1 FROM leave_allocations LIMIT 1");
+    tableReady = true;
+    return;
+  } catch (err) {
+    if (err.code !== "ER_NO_SUCH_TABLE") {
+      throw err;
+    }
+  }
+
   await pool.query(ENSURE_TABLE_SQL);
   tableReady = true;
 }
@@ -64,10 +75,10 @@ function allocationToRow(item) {
 }
 
 async function getAllocationsByYear(year) {
-  await initLeaveAllocations();
+  await ensureReady();
   const pool = getPool();
   const [rows] = await pool.query(
-    `SELECT * FROM leave_allocations WHERE year = ? ORDER BY employee_name`,
+    "SELECT * FROM leave_allocations WHERE `year` = ? ORDER BY employee_name",
     [year]
   );
   return rows.map(rowToAllocation);
@@ -76,7 +87,7 @@ async function getAllocationsByYear(year) {
 async function getAllocationById(id) {
   await ensureReady();
   const pool = getPool();
-  const [rows] = await pool.query(`SELECT * FROM leave_allocations WHERE id = ?`, [id]);
+  const [rows] = await pool.query("SELECT * FROM leave_allocations WHERE id = ?", [id]);
   return rows.length ? rowToAllocation(rows[0]) : null;
 }
 
@@ -84,7 +95,7 @@ async function findByEmployeeAndYear(employeeId, year) {
   await ensureReady();
   const pool = getPool();
   const [rows] = await pool.query(
-    `SELECT * FROM leave_allocations WHERE employee_id = ? AND year = ?`,
+    "SELECT * FROM leave_allocations WHERE employee_id = ? AND `year` = ?",
     [employeeId, year]
   );
   return rows.length ? rowToAllocation(rows[0]) : null;
@@ -93,7 +104,7 @@ async function findByEmployeeAndYear(employeeId, year) {
 async function getNextId() {
   await ensureReady();
   const pool = getPool();
-  const [rows] = await pool.query(`SELECT COALESCE(MAX(id), 0) + 1 AS next_id FROM leave_allocations`);
+  const [rows] = await pool.query("SELECT COALESCE(MAX(id), 0) + 1 AS next_id FROM leave_allocations");
   return Number(rows[0].next_id);
 }
 
@@ -103,7 +114,7 @@ async function insertAllocation(item) {
   const row = allocationToRow(item);
   await pool.query(
     `INSERT INTO leave_allocations
-     (id, employee_id, employee_name, year, annual_leave, sick_leave, personal_leave, unpaid_leave, notes, created_at, updated_at)
+     (id, employee_id, employee_name, \`year\`, annual_leave, sick_leave, personal_leave, unpaid_leave, notes, created_at, updated_at)
      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [
       row.id,
@@ -123,11 +134,12 @@ async function insertAllocation(item) {
 }
 
 async function updateAllocation(id, item) {
+  await ensureReady();
   const pool = getPool();
   const row = allocationToRow({ ...item, id, updatedAt: new Date().toISOString() });
   await pool.query(
     `UPDATE leave_allocations
-     SET employee_id = ?, employee_name = ?, year = ?,
+     SET employee_id = ?, employee_name = ?, \`year\` = ?,
          annual_leave = ?, sick_leave = ?, personal_leave = ?, unpaid_leave = ?,
          notes = ?, updated_at = ?
      WHERE id = ?`,
@@ -152,21 +164,23 @@ async function deleteAllocation(id) {
   const existing = await getAllocationById(id);
   if (!existing) return null;
   const pool = getPool();
-  await pool.query(`DELETE FROM leave_allocations WHERE id = ?`, [id]);
+  await pool.query("DELETE FROM leave_allocations WHERE id = ?", [id]);
   return existing;
 }
 
 async function migrateFromAppCollections() {
-  if (!isMysqlEnabled()) return 0;
+  if (!isMysqlEnabled() || migrationDone) return 0;
 
   await ensureReady();
+  migrationDone = true;
+
   const pool = getPool();
-  const [countRows] = await pool.query(`SELECT COUNT(*) AS total FROM leave_allocations`);
+  const [countRows] = await pool.query("SELECT COUNT(*) AS total FROM leave_allocations");
   if (Number(countRows[0].total) > 0) return 0;
 
   try {
     const [collectionRows] = await pool.query(
-      `SELECT data FROM app_collections WHERE collection_name = 'leave_allocations'`
+      "SELECT data FROM app_collections WHERE collection_name = 'leave_allocations'"
     );
     if (!collectionRows.length) return 0;
 
@@ -181,7 +195,7 @@ async function migrateFromAppCollections() {
       const row = allocationToRow(item);
       await pool.query(
         `INSERT IGNORE INTO leave_allocations
-         (id, employee_id, employee_name, year, annual_leave, sick_leave, personal_leave, unpaid_leave, notes, created_at, updated_at)
+         (id, employee_id, employee_name, \`year\`, annual_leave, sick_leave, personal_leave, unpaid_leave, notes, created_at, updated_at)
          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
           row.id,

@@ -71,7 +71,12 @@ router.get("/", async (req, res) => {
   try {
     const year = Number(req.query.year) || new Date().getFullYear();
     const allocations = await leaveAllocationStore.getAllocationsByYear(year);
-    const leaves = readLeaves();
+    let leaves = [];
+    try {
+      leaves = readLeaves();
+    } catch (readErr) {
+      console.error("GET /leave-allocations leaves read failed:", readErr.message);
+    }
 
     if (MANAGERS.includes(req.user.role)) {
       return res.json(allocations.map((item) => enrichAllocation(item, leaves)));
