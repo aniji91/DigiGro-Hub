@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { MessageSquareText, Activity, Plus, Pencil, Trash2, ArrowLeft, Calendar, Users, Building2, LayoutGrid } from "lucide-react";
+import { MessageSquareText, ListTodo, Plus, Pencil, Trash2, ArrowLeft, Calendar, Users, Building2, LayoutGrid } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { fetchMyProjects, fetchProjectUpdates, projectUpdatesApi, projectsApi } from "../api/crmApi";
 import { fetchEmployees } from "../api/employeeApi";
@@ -11,14 +11,21 @@ const today = () => new Date().toISOString().slice(0, 10);
 
 const EMPTY_POINT = {
   date: today(),
-  type: "discussion",
+  type: "status",
   content: "",
+  taskStatus: "New",
 };
 
 const TYPE_LABELS = {
   discussion: "Discussion Point",
-  status: "Status Point",
+  status: "Daily Task",
 };
+
+const TASK_STATUS_OPTIONS = ["New", "Completed", "Carry forward"];
+
+function taskStatusClass(status = "") {
+  return status.toLowerCase().replace(/\s+/g, "-");
+}
 
 function statusClass(status = "") {
   return status.toLowerCase().replace(/\s+/g, "-");
@@ -58,7 +65,7 @@ export default function ViewProjects() {
   }, [updates, filterType]);
 
   const discussionCount = updates.filter((u) => u.type === "discussion").length;
-  const statusCount = updates.filter((u) => u.type === "status").length;
+  const taskCount = updates.filter((u) => u.type === "status").length;
   const teamIds = selectedProject?.assignedEmployeeIds || [];
 
   const groupedUpdates = useMemo(() => {
@@ -139,19 +146,33 @@ export default function ViewProjects() {
     setForm({ ...EMPTY_POINT, date: today() });
   }
 
+  function buildPayload() {
+    const payload = {
+      date: form.date,
+      type: form.type,
+      content: form.content,
+    };
+    if (form.type === "status") {
+      payload.taskStatus = form.taskStatus;
+    }
+    return payload;
+  }
+
   async function handleSubmit(e) {
     e.preventDefault();
     if (!selectedProject || !form.content.trim()) return;
+    if (form.type === "status" && !form.taskStatus) return;
 
     try {
       setSaving(true);
       setError("");
+      const payload = buildPayload();
       if (editing) {
-        const updated = await projectUpdatesApi.update(editing.id, form);
+        const updated = await projectUpdatesApi.update(editing.id, payload);
         setUpdates((prev) => prev.map((u) => (u.id === updated.id ? updated : u)));
       } else {
         const created = await projectUpdatesApi.create({
-          ...form,
+          ...payload,
           projectId: selectedProject.id,
         });
         setUpdates((prev) => [created, ...prev]);
@@ -170,6 +191,7 @@ export default function ViewProjects() {
       date: item.date,
       type: item.type,
       content: item.content,
+      taskStatus: item.taskStatus || "New",
     });
   }
 
@@ -274,17 +296,17 @@ export default function ViewProjects() {
               <div className="project-view-hero-aside">
                 <div className="project-view-stat-cards">
                   <div className="project-view-stat">
+                    <ListTodo size={18} />
+                    <div>
+                      <strong>{taskCount}</strong>
+                      <span>Daily tasks</span>
+                    </div>
+                  </div>
+                  <div className="project-view-stat">
                     <MessageSquareText size={18} />
                     <div>
                       <strong>{discussionCount}</strong>
                       <span>Discussions</span>
-                    </div>
-                  </div>
-                  <div className="project-view-stat">
-                    <Activity size={18} />
-                    <div>
-                      <strong>{statusCount}</strong>
-                      <span>Status points</span>
                     </div>
                   </div>
                 </div>
@@ -319,8 +341,8 @@ export default function ViewProjects() {
               <section className="project-view-updates">
                 <div className="project-view-updates-header">
                   <div>
-                    <h2>Daily updates</h2>
-                    <p className="muted">Discussion points and status updates for the team</p>
+                    <h2>Daily tasks &amp; discussions</h2>
+                    <p className="muted">Daily tasks and discussion points for the team</p>
                   </div>
                   <div className="project-view-filters">
                     <button
@@ -332,17 +354,17 @@ export default function ViewProjects() {
                     </button>
                     <button
                       type="button"
+                      className={`filter-chip ${filterType === "status" ? "active" : ""}`}
+                      onClick={() => setFilterType("status")}
+                    >
+                      <ListTodo size={14} /> Daily Tasks ({taskCount})
+                    </button>
+                    <button
+                      type="button"
                       className={`filter-chip ${filterType === "discussion" ? "active" : ""}`}
                       onClick={() => setFilterType("discussion")}
                     >
                       <MessageSquareText size={14} /> Discussion ({discussionCount})
-                    </button>
-                    <button
-                      type="button"
-                      className={`filter-chip ${filterType === "status" ? "active" : ""}`}
-                      onClick={() => setFilterType("status")}
-                    >
-                      <Activity size={14} /> Status ({statusCount})
                     </button>
                   </div>
                 </div>
@@ -365,15 +387,38 @@ export default function ViewProjects() {
                       Type
                       <select
                         value={form.type}
-                        onChange={(e) => setForm({ ...form, type: e.target.value })}
+                        onChange={(e) => {
+                          const nextType = e.target.value;
+                          setForm({
+                            ...form,
+                            type: nextType,
+                            taskStatus: nextType === "status" ? form.taskStatus || "New" : "New",
+                          });
+                        }}
                         required
                       >
+                        <option value="status">Daily task</option>
                         <option value="discussion">Daily discussion point</option>
-                        <option value="status">Status point</option>
                       </select>
                     </label>
+                    {form.type === "status" && (
+                      <label>
+                        Status
+                        <select
+                          value={form.taskStatus}
+                          onChange={(e) => setForm({ ...form, taskStatus: e.target.value })}
+                          required
+                        >
+                          {TASK_STATUS_OPTIONS.map((option) => (
+                            <option key={option} value={option}>
+                              {option}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+                    )}
                     <label className="span-full">
-                      {form.type === "discussion" ? "Discussion" : "Status update"}
+                      {form.type === "discussion" ? "Discussion" : "Task description"}
                       <textarea
                         rows={4}
                         value={form.content}
@@ -381,7 +426,7 @@ export default function ViewProjects() {
                         placeholder={
                           form.type === "discussion"
                             ? "Topics discussed, decisions, blockers, next steps..."
-                            : "Current progress, milestones, risks, delivery status..."
+                            : "Describe the task, progress, blockers, or next steps..."
                         }
                         required
                       />
@@ -402,7 +447,7 @@ export default function ViewProjects() {
 
                 <div className="project-points-feed">
                   {groupedUpdates.length === 0 ? (
-                    <div className="empty-state">No discussion or status points yet. Add the first update above.</div>
+                    <div className="empty-state">No discussion points or daily tasks yet. Add the first entry above.</div>
                   ) : (
                     groupedUpdates.map(([date, items]) => (
                       <div key={date} className="project-points-day">
@@ -419,6 +464,11 @@ export default function ViewProjects() {
                                 <span className={`badge point-type-${item.type}`}>
                                   {TYPE_LABELS[item.type]}
                                 </span>
+                                {item.type === "status" && (
+                                  <span className={`badge task-status task-status--${taskStatusClass(item.taskStatus || "New")}`}>
+                                    {item.taskStatus || "New"}
+                                  </span>
+                                )}
                                 <span className="celebration-meta">
                                   {item.authorName} · {new Date(item.createdAt).toLocaleTimeString("en-US", {
                                     hour: "numeric",

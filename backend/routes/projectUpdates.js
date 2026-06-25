@@ -8,6 +8,7 @@ const PROJECTS_FILE = dataPath("projects.json");
 
 const MANAGE_ROLES = new Set(["superadmin", "admin", "product_manager"]);
 const POINT_TYPES = new Set(["discussion", "status"]);
+const TASK_STATUSES = new Set(["New", "Completed", "Carry forward"]);
 
 function readUpdates() {
   return readData(FILE);
@@ -71,7 +72,7 @@ router.get("/", (req, res) => {
 });
 
 router.post("/", (req, res) => {
-  const { projectId, date, type, content } = req.body;
+  const { projectId, date, type, content, taskStatus } = req.body;
 
   if (!projectId || !date || !type || !content?.trim()) {
     return res.status(400).json({ error: "Project, date, type, and content are required" });
@@ -79,6 +80,10 @@ router.post("/", (req, res) => {
 
   if (!POINT_TYPES.has(type)) {
     return res.status(400).json({ error: "Type must be discussion or status" });
+  }
+
+  if (type === "status" && !TASK_STATUSES.has(taskStatus)) {
+    return res.status(400).json({ error: "Task status must be New, Completed, or Carry forward" });
   }
 
   const parsedProjectId = Number(projectId);
@@ -99,6 +104,7 @@ router.post("/", (req, res) => {
     date,
     type,
     content: content.trim(),
+    taskStatus: type === "status" ? taskStatus : null,
     authorId: req.user.id,
     authorName: req.user.name,
     authorRole: req.user.role,
@@ -129,17 +135,26 @@ router.put("/:id", (req, res) => {
     return res.status(403).json({ error: "You can only edit your own points" });
   }
 
-  const { date, type, content } = req.body;
+  const { date, type, content, taskStatus } = req.body;
 
   if (type && !POINT_TYPES.has(type)) {
     return res.status(400).json({ error: "Type must be discussion or status" });
   }
 
+  const nextType = type ?? item.type;
+  if (nextType === "status" && taskStatus !== undefined && !TASK_STATUSES.has(taskStatus)) {
+    return res.status(400).json({ error: "Task status must be New, Completed, or Carry forward" });
+  }
+  if (nextType === "status" && taskStatus === undefined && !item.taskStatus) {
+    return res.status(400).json({ error: "Task status is required for daily tasks" });
+  }
+
   updates[index] = {
     ...item,
     date: date ?? item.date,
-    type: type ?? item.type,
+    type: nextType,
     content: content !== undefined ? content.trim() : item.content,
+    taskStatus: nextType === "status" ? (taskStatus ?? item.taskStatus ?? "New") : null,
     updatedAt: new Date().toISOString(),
   };
 
