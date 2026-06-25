@@ -84,7 +84,7 @@ router.get("/", async (req, res) => {
 
     return res.status(403).json({ error: "Access denied" });
   } catch (err) {
-    console.error("GET /leave-allocations failed:", err.message);
+    console.error("GET /leave-allocations failed:", err.code || "", err.message);
     res.status(500).json({ error: "Failed to load leave allocations" });
   }
 });

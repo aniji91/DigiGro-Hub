@@ -24,7 +24,7 @@ const projectOnboardingRoutes = require("./routes/projectOnboarding");
 const announcementRoutes = require("./routes/announcements");
 const projectUpdateRoutes = require("./routes/projectUpdates");
 const { syncAllProjectsOnboarding } = require("./utils/projectOnboarding");
-const { migrateFromAppCollections } = require("./utils/leaveAllocationStore");
+const { initLeaveAllocations } = require("./utils/leaveAllocationStore");
 
 const app = express();
 const PORT = Number(process.env.PORT || 5000);
@@ -96,7 +96,7 @@ async function bootstrapData() {
     try {
       await testConnection();
       await initDatabase();
-      const migrated = await migrateFromAppCollections();
+      const migrated = await initLeaveAllocations();
       if (migrated > 0) {
         console.log(`Migrated ${migrated} leave allocation(s) to leave_allocations table`);
       }
