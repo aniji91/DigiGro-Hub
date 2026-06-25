@@ -51,6 +51,7 @@ export default function ViewProjects() {
   const [form, setForm] = useState(EMPTY_POINT);
   const [editing, setEditing] = useState(null);
   const [filterType, setFilterType] = useState("all");
+  const [showAddForm, setShowAddForm] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -68,6 +69,14 @@ export default function ViewProjects() {
   const taskCount = updates.filter((u) => u.type === "status").length;
   const teamIds = selectedProject?.assignedEmployeeIds || [];
 
+  const teamMembers = useMemo(
+    () =>
+      teamIds
+        .map((id) => ({ id, name: employeeMap[id] }))
+        .filter((member) => member.name),
+    [teamIds, employeeMap]
+  );
+
   const groupedUpdates = useMemo(() => {
     const groups = new Map();
     filteredUpdates.forEach((item) => {
@@ -76,12 +85,6 @@ export default function ViewProjects() {
     });
     return [...groups.entries()].sort((a, b) => b[0].localeCompare(a[0]));
   }, [filteredUpdates]);
-
-  function teamMemberLabel(id) {
-    const name = employeeMap[id];
-    if (!name) return null;
-    return name;
-  }
 
   function initials(name) {
     return name
@@ -150,6 +153,7 @@ export default function ViewProjects() {
     if (!selectedId) return;
     loadUpdates(selectedId).catch((err) => setError(err.message));
     setEditing(null);
+    setShowAddForm(false);
     setForm({ ...EMPTY_POINT, date: today() });
   }, [selectedId]);
 
@@ -160,6 +164,29 @@ export default function ViewProjects() {
   function resetForm() {
     setEditing(null);
     setForm({ ...EMPTY_POINT, date: today() });
+    setShowAddForm(false);
+  }
+
+  function openAddForm(type = form.type) {
+    setEditing(null);
+    setForm({
+      ...EMPTY_POINT,
+      date: today(),
+      type: type === "discussion" ? "discussion" : "status",
+      taskStatus: "New",
+    });
+    setShowAddForm(true);
+  }
+
+  function startEdit(item) {
+    setEditing(item);
+    setForm({
+      date: item.date,
+      type: item.type,
+      content: item.content,
+      taskStatus: item.taskStatus || "New",
+    });
+    setShowAddForm(true);
   }
 
   function buildPayload() {
@@ -199,16 +226,6 @@ export default function ViewProjects() {
     } finally {
       setSaving(false);
     }
-  }
-
-  function startEdit(item) {
-    setEditing(item);
-    setForm({
-      date: item.date,
-      type: item.type,
-      content: item.content,
-      taskStatus: item.taskStatus || "New",
-    });
   }
 
   async function handleDelete(id) {
@@ -278,38 +295,38 @@ export default function ViewProjects() {
         {selectedProject ? (
           <>
             <header className="project-view-hero">
-              <div className="project-view-hero-main">
-                <div className="project-view-hero-nav">
-                  <button
-                    type="button"
-                    className="project-view-back project-view-back--btn"
-                    onClick={() => navigate("/view-projects")}
-                  >
-                    <LayoutGrid size={16} /> All projects
-                  </button>
-                  <Link
-                    to={user?.role === "employee" ? "/my-projects" : "/projects"}
-                    className="project-view-back"
-                  >
-                    <ArrowLeft size={16} /> Back to projects
-                  </Link>
+              <div className="project-view-hero-top">
+                <div className="project-view-hero-main">
+                  <div className="project-view-hero-nav">
+                    <button
+                      type="button"
+                      className="project-view-back project-view-back--btn"
+                      onClick={() => navigate("/view-projects")}
+                    >
+                      <LayoutGrid size={16} /> All projects
+                    </button>
+                    <Link
+                      to={user?.role === "employee" ? "/my-projects" : "/projects"}
+                      className="project-view-back"
+                    >
+                      <ArrowLeft size={16} /> Back to projects
+                    </Link>
+                  </div>
+                  <div className="project-view-hero-title">
+                    <h1>{selectedProject.name}</h1>
+                    <span className={`status-pill status-pill--lg status-pill--${statusClass(selectedProject.status)}`}>
+                      {selectedProject.status}
+                    </span>
+                  </div>
+                  <div className="project-view-hero-meta">
+                    <span><Building2 size={15} /> {selectedProject.clientName}</span>
+                    {selectedProject.projectType && (
+                      <span>{PROJECT_TYPE_LABELS[selectedProject.projectType] || selectedProject.projectType}</span>
+                    )}
+                    <span><Calendar size={15} /> {formatDate(selectedProject.startDate)} – {formatDate(selectedProject.endDate)}</span>
+                  </div>
                 </div>
-                <div className="project-view-hero-title">
-                  <h1>{selectedProject.name}</h1>
-                  <span className={`status-pill status-pill--lg status-pill--${statusClass(selectedProject.status)}`}>
-                    {selectedProject.status}
-                  </span>
-                </div>
-                <div className="project-view-hero-meta">
-                  <span><Building2 size={15} /> {selectedProject.clientName}</span>
-                  {selectedProject.projectType && (
-                    <span>{PROJECT_TYPE_LABELS[selectedProject.projectType] || selectedProject.projectType}</span>
-                  )}
-                  <span><Calendar size={15} /> {formatDate(selectedProject.startDate)} – {formatDate(selectedProject.endDate)}</span>
-                </div>
-              </div>
 
-              <div className="project-view-hero-aside">
                 <div className="project-view-stat-cards">
                   <div className="project-view-stat">
                     <ListTodo size={18} />
@@ -326,70 +343,90 @@ export default function ViewProjects() {
                     </div>
                   </div>
                 </div>
+              </div>
 
-                <div className="project-view-team-block">
-                  <span className="field-label"><Users size={14} /> Team</span>
-                  <div className="project-view-team-avatars">
-                    {teamIds.filter((id) => teamMemberLabel(id)).length > 0 ? (
-                      teamIds
-                        .map((id) => ({ id, name: teamMemberLabel(id) }))
-                        .filter((member) => member.name)
-                        .map((member) => (
-                          <span key={member.id} className="team-avatar" title={member.name}>
-                            <span className="team-avatar-initials">{initials(member.name)}</span>
-                            <span className="team-avatar-name">{member.name}</span>
-                          </span>
-                        ))
-                    ) : (
-                      <span className="muted">No members assigned</span>
-                    )}
+              <div className="project-view-hero-team">
+                <span className="project-view-team-label">
+                  <Users size={14} />
+                  Team
+                  {teamMembers.length > 0 && (
+                    <span className="project-view-team-count">{teamMembers.length}</span>
+                  )}
+                </span>
+                {teamMembers.length > 0 ? (
+                  <div className="project-view-team-chips">
+                    {teamMembers.map((member) => (
+                      <span key={member.id} className="team-chip" title={member.name}>
+                        <span className="team-chip-initials">{initials(member.name)}</span>
+                        <span className="team-chip-name">{member.name}</span>
+                      </span>
+                    ))}
                   </div>
-                </div>
+                ) : (
+                  <span className="muted project-view-team-empty">No members assigned</span>
+                )}
               </div>
             </header>
 
-            <div className="project-view-body">
-              <section className="project-view-details-panel">
-                <h3>Project details</h3>
+            <div className="project-view-body project-view-body--stacked">
+              <details className="project-view-details-collapsible">
+                <summary>Project details</summary>
                 <ProjectBriefDetails project={selectedProject} hideOverview />
-              </section>
+              </details>
 
               <section className="project-view-updates">
-                <div className="project-view-updates-header">
-                  <div>
-                    <h2>Daily tasks &amp; discussions</h2>
-                    <p className="muted">Daily tasks and discussion points for the team</p>
-                  </div>
-                  <div className="project-view-filters">
-                    <button
-                      type="button"
-                      className={`filter-chip ${filterType === "all" ? "active" : ""}`}
-                      onClick={() => selectFilter("all")}
-                    >
-                      All ({updates.length})
-                    </button>
-                    <button
-                      type="button"
-                      className={`filter-chip ${filterType === "status" ? "active" : ""}`}
-                      onClick={() => selectFilter("status")}
-                    >
-                      <ListTodo size={14} /> Daily Tasks ({taskCount})
-                    </button>
-                    <button
-                      type="button"
-                      className={`filter-chip ${filterType === "discussion" ? "active" : ""}`}
-                      onClick={() => selectFilter("discussion")}
-                    >
-                      <MessageSquareText size={14} /> Discussion ({discussionCount})
-                    </button>
+                <div className="project-view-updates-toolbar">
+                  <h2>Daily tasks &amp; discussions</h2>
+                  <div className="project-view-updates-actions">
+                    <div className="project-view-filters">
+                      <button
+                        type="button"
+                        className={`filter-chip ${filterType === "all" ? "active" : ""}`}
+                        onClick={() => selectFilter("all")}
+                      >
+                        All ({updates.length})
+                      </button>
+                      <button
+                        type="button"
+                        className={`filter-chip ${filterType === "status" ? "active" : ""}`}
+                        onClick={() => selectFilter("status")}
+                      >
+                        <ListTodo size={14} /> Tasks ({taskCount})
+                      </button>
+                      <button
+                        type="button"
+                        className={`filter-chip ${filterType === "discussion" ? "active" : ""}`}
+                        onClick={() => selectFilter("discussion")}
+                      >
+                        <MessageSquareText size={14} /> Discussion ({discussionCount})
+                      </button>
+                    </div>
+                    {!showAddForm && (
+                      <button
+                        type="button"
+                        className="btn-primary project-view-add-btn"
+                        onClick={() => openAddForm(filterType === "discussion" ? "discussion" : "status")}
+                      >
+                        <Plus size={16} />
+                        {filterType === "discussion" ? "Add discussion" : "Add task"}
+                      </button>
+                    )}
                   </div>
                 </div>
 
                 {error && <div className="alert error">{error}</div>}
 
-                <form className="project-point-form" onSubmit={handleSubmit}>
-                  <h3>{editing ? "Edit point" : "Add point"}</h3>
-                  <div className="project-point-form-grid">
+                {showAddForm && (
+                <form className="project-point-form project-point-form--compact" onSubmit={handleSubmit}>
+                  <div className="project-point-form-head">
+                    <h3>{editing ? "Edit point" : "Add point"}</h3>
+                    {!editing && (
+                      <button type="button" className="btn-secondary btn-sm" onClick={resetForm}>
+                        Cancel
+                      </button>
+                    )}
+                  </div>
+                  <div className="project-point-form-grid project-point-form-grid--compact">
                     <label>
                       Date
                       <input
@@ -439,7 +476,7 @@ export default function ViewProjects() {
                     <label className="span-full">
                       {form.type === "discussion" ? "Discussion" : "Task description"}
                       <textarea
-                        rows={4}
+                        rows={2}
                         value={form.content}
                         onChange={(e) => setForm({ ...form, content: e.target.value })}
                         placeholder={
@@ -463,6 +500,7 @@ export default function ViewProjects() {
                     </button>
                   </div>
                 </form>
+                )}
 
                 <div className="project-points-feed">
                   {groupedUpdates.length === 0 ? (
