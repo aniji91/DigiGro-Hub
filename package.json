@@ -3,14 +3,15 @@
   "version": "1.0.0",
   "private": true,
   "description": "DigiGro Hub - Employee Management App",
+  "main": "server.js",
   "scripts": {
     "build": "npm run build:frontend && npm run build:backend",
     "build:frontend": "cd frontend && npm install && npm run build",
     "build:backend": "cd backend && npm install",
-    "start": "node backend/server.js",
+    "start": "node server.js",
     "db:migrate": "cd backend && node scripts/migrate-to-mysql.js"
   },
   "engines": {
-    "node": ">=18"
+    "node": "20.x"
   }
 }

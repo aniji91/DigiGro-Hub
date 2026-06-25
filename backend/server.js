@@ -1,4 +1,4 @@
-require("dotenv").config();
+require("dotenv").config({ path: require("path").join(__dirname, ".env") });
 
 const fs = require("fs");
 const path = require("path");
@@ -78,7 +78,7 @@ async function startServer() {
   await syncAllEmployeeUsers(employees);
   syncAllProjectsOnboarding();
 
-  app.listen(PORT, () => {
+  app.listen(PORT, "0.0.0.0", () => {
     console.log(`Server running on port ${PORT}${isProduction ? " (production)" : ""}`);
     console.log(`Employee login accounts ready: ${employees.length}`);
     if (fs.existsSync(FRONTEND_DIST)) {
