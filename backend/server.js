@@ -26,8 +26,20 @@ const { syncAllProjectsOnboarding } = require("./utils/projectOnboarding");
 
 const app = express();
 const PORT = Number(process.env.PORT || 5000);
-const FRONTEND_DIST = path.join(__dirname, "..", "frontend", "dist");
 const isProduction = process.env.NODE_ENV === "production";
+
+function resolveFrontendDist() {
+  const candidates = [
+    path.join(__dirname, "..", "frontend", "dist"),
+    path.join(__dirname, "..", "dist"),
+    path.join(process.cwd(), "frontend", "dist"),
+    path.join(process.cwd(), "dist"),
+  ];
+
+  return candidates.find((dir) => fs.existsSync(path.join(dir, "index.html"))) || null;
+}
+
+const FRONTEND_DIST = resolveFrontendDist();
 
 if (process.env.FRONTEND_URL) {
   app.use(cors({ origin: process.env.FRONTEND_URL }));
@@ -36,6 +48,15 @@ if (process.env.FRONTEND_URL) {
 }
 
 app.use(express.json({ limit: "10mb" }));
+
+app.get("/api/health", (req, res) => {
+  res.json({
+    ok: true,
+    mysql: isMysqlEnabled(),
+    frontend: Boolean(FRONTEND_DIST),
+    port: PORT,
+  });
+});
 
 app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
@@ -53,23 +74,31 @@ app.use("/api/announcements", announcementRoutes);
 app.use("/api/project-updates", projectUpdateRoutes);
 app.use("/api/dashboard", dashboardRoutes);
 
-if (fs.existsSync(FRONTEND_DIST)) {
+if (FRONTEND_DIST) {
   app.use(express.static(FRONTEND_DIST));
-
   app.get(/^(?!\/api).*/, (req, res) => {
     res.sendFile(path.join(FRONTEND_DIST, "index.html"));
   });
 } else {
   app.get("/", (req, res) => {
-    res.json({ message: "Employee Management API is running" });
+    res.json({
+      message: "Employee Management API is running",
+      hint: "Frontend build not found. Run npm run build.",
+    });
   });
 }
 
-async function startServer() {
+async function bootstrapData() {
   if (isMysqlEnabled()) {
-    await testConnection();
-    await initDatabase();
-    console.log("Connected to MySQL database");
+    try {
+      await testConnection();
+      await initDatabase();
+      console.log("Connected to MySQL database");
+    } catch (err) {
+      console.error("MySQL connection failed:", err.message);
+      console.error("Check DB_HOST, DB_USER, DB_PASSWORD, DB_NAME in environment variables.");
+      throw err;
+    }
   } else {
     console.log("Using local JSON files (set USE_MYSQL=true to use MySQL)");
   }
@@ -77,17 +106,22 @@ async function startServer() {
   const employees = readData(dataPath("employees.json"));
   await syncAllEmployeeUsers(employees);
   syncAllProjectsOnboarding();
+  console.log(`Employee login accounts ready: ${employees.length}`);
+}
 
+function startServer() {
   app.listen(PORT, "0.0.0.0", () => {
     console.log(`Server running on port ${PORT}${isProduction ? " (production)" : ""}`);
-    console.log(`Employee login accounts ready: ${employees.length}`);
-    if (fs.existsSync(FRONTEND_DIST)) {
-      console.log("Serving frontend from frontend/dist");
+    if (FRONTEND_DIST) {
+      console.log(`Serving frontend from ${FRONTEND_DIST}`);
+    } else {
+      console.warn("Frontend dist not found — API only mode");
     }
+
+    bootstrapData().catch((err) => {
+      console.error("Data bootstrap failed:", err.message);
+    });
   });
 }
 
-startServer().catch((err) => {
-  console.error("Failed to start server:", err);
-  process.exit(1);
-});
+startServer();
