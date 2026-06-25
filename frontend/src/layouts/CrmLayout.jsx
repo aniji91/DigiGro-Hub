@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { ChatNotificationProvider } from "../context/ChatNotificationContext";
@@ -15,6 +16,17 @@ export default function CrmLayout() {
   const onProjectViewPage =
     location.pathname.startsWith("/view-projects") ||
     location.pathname.startsWith("/my-projects");
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(
+    () => localStorage.getItem("sidebarCollapsed") === "true"
+  );
+
+  function toggleSidebar() {
+    setSidebarCollapsed((prev) => {
+      const next = !prev;
+      localStorage.setItem("sidebarCollapsed", String(next));
+      return next;
+    });
+  }
 
   function handleLogout() {
     logout();
@@ -23,13 +35,15 @@ export default function CrmLayout() {
 
   return (
     <ChatNotificationProvider>
-      <div className="crm-shell">
+      <div className={`crm-shell ${sidebarCollapsed ? "crm-shell--sidebar-collapsed" : ""}`}>
         <Sidebar
           menuItems={menuItems}
           user={user}
           roleLabel={roleLabel}
           roleColor={ROLE_COLORS[user.role]}
           onLogout={handleLogout}
+          collapsed={sidebarCollapsed}
+          onToggle={toggleSidebar}
         />
         <ChatToastStack />
         <div className="crm-main">

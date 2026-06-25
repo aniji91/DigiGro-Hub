@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { MessageSquareText, Activity, Plus, Pencil, Trash2, ArrowLeft, Calendar, Users, Building2 } from "lucide-react";
+import { MessageSquareText, Activity, Plus, Pencil, Trash2, ArrowLeft, Calendar, Users, Building2, LayoutGrid } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { fetchMyProjects, fetchProjectUpdates, projectUpdatesApi, projectsApi } from "../api/crmApi";
 import { fetchEmployees } from "../api/employeeApi";
@@ -111,10 +111,6 @@ export default function ViewProjects() {
         setError("");
         setLoading(true);
         const projectData = await loadProjects();
-        if (!projectId && projectData[0]?.id) {
-          navigate(`/view-projects/${projectData[0].id}`, { replace: true });
-          return;
-        }
         if (projectId && !projectData.some((p) => p.id === Number(projectId)) && projectData[0]?.id) {
           navigate(`/view-projects/${projectData[0].id}`, { replace: true });
         }
@@ -205,44 +201,61 @@ export default function ViewProjects() {
   }
 
   return (
-    <div className="project-view-page">
-      <aside className="project-view-sidebar">
-        <div className="project-view-sidebar-header">
-          <h2>Projects</h2>
-          <span className="muted">{projects.length} total</span>
-        </div>
-        <ul className="project-view-list">
-          {projects.map((project) => (
-            <li key={project.id}>
-              <button
-                type="button"
-                className={`project-view-list-item ${project.id === selectedId ? "active" : ""}`}
-                onClick={() => selectProject(project.id)}
-              >
-                <div className="project-view-list-item-top">
-                  <strong>{project.name}</strong>
-                  <span className={`status-pill status-pill--${statusClass(project.status)}`}>
-                    {project.status}
+    <div className={`project-view-page ${selectedProject ? "project-view-page--detail" : "project-view-page--list"}`}>
+      {!selectedProject ? (
+        <main className="project-view-list-page">
+          <header className="project-view-list-page-header">
+            <div>
+              <h1>All projects</h1>
+              <p className="muted">Select a project to view details and daily updates</p>
+            </div>
+            <span className="project-view-list-count">{projects.length} total</span>
+          </header>
+          <ul className="project-view-grid">
+            {projects.map((project) => (
+              <li key={project.id}>
+                <button
+                  type="button"
+                  className="project-view-grid-card"
+                  onClick={() => selectProject(project.id)}
+                >
+                  <div className="project-view-list-item-top">
+                    <strong>{project.name}</strong>
+                    <span className={`status-pill status-pill--${statusClass(project.status)}`}>
+                      {project.status}
+                    </span>
+                  </div>
+                  <span className="project-view-list-client">{project.clientName}</span>
+                  <span className="project-view-grid-meta">
+                    <Calendar size={14} />
+                    {formatDate(project.startDate)} – {formatDate(project.endDate)}
                   </span>
-                </div>
-                <span className="project-view-list-client">{project.clientName}</span>
-              </button>
-            </li>
-          ))}
-        </ul>
-      </aside>
-
-      <main className="project-view-main">
+                </button>
+              </li>
+            ))}
+          </ul>
+        </main>
+      ) : (
+      <main className="project-view-main project-view-main--full">
         {selectedProject ? (
           <>
             <header className="project-view-hero">
               <div className="project-view-hero-main">
-                <Link
-                  to={user?.role === "employee" ? "/my-projects" : "/projects"}
-                  className="project-view-back"
-                >
-                  <ArrowLeft size={16} /> Back to projects
-                </Link>
+                <div className="project-view-hero-nav">
+                  <button
+                    type="button"
+                    className="project-view-back project-view-back--btn"
+                    onClick={() => navigate("/view-projects")}
+                  >
+                    <LayoutGrid size={16} /> All projects
+                  </button>
+                  <Link
+                    to={user?.role === "employee" ? "/my-projects" : "/projects"}
+                    className="project-view-back"
+                  >
+                    <ArrowLeft size={16} /> Back to projects
+                  </Link>
+                </div>
                 <div className="project-view-hero-title">
                   <h1>{selectedProject.name}</h1>
                   <span className={`status-pill status-pill--lg status-pill--${statusClass(selectedProject.status)}`}>
@@ -434,10 +447,9 @@ export default function ViewProjects() {
               </section>
             </div>
           </>
-        ) : (
-          <div className="empty-state">Select a project from the sidebar.</div>
-        )}
+        ) : null}
       </main>
+      )}
     </div>
   );
 }

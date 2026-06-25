@@ -48,7 +48,7 @@ export const MENU_ITEMS = [
     label: "View Projects",
     path: "/view-projects",
     icon: LayoutList,
-    roles: ["superadmin", "admin", "product_manager", "employee"],
+    roles: ["superadmin", "admin", "product_manager"],
   },
   {
     key: "myProjects",
