@@ -24,7 +24,9 @@ async function runSchema(connection) {
 }
 
 async function importCollections(connection) {
-  const files = fs.readdirSync(DATA_DIR).filter((file) => file.endsWith(".json"));
+  const files = fs
+    .readdirSync(DATA_DIR)
+    .filter((file) => file.endsWith(".json") && file !== "leave_allocations.json");
   for (const file of files) {
     const key = path.basename(file, ".json");
     const data = readJsonFile(path.join(DATA_DIR, file));
@@ -188,6 +190,31 @@ async function syncNormalizedTables(connection) {
       );
     }
     console.log(`Synced leaves: ${collections.leaves.length}`);
+  }
+
+  if (Array.isArray(collections.leave_allocations)) {
+    await connection.query("DELETE FROM leave_allocations");
+    for (const item of collections.leave_allocations) {
+      await connection.query(
+        `INSERT INTO leave_allocations
+         (id, employee_id, employee_name, year, annual_leave, sick_leave, personal_leave, unpaid_leave, notes, created_at, updated_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [
+          item.id,
+          item.employeeId,
+          item.employeeName,
+          item.year,
+          Number(item.annualLeave) || 0,
+          Number(item.sickLeave) || 0,
+          Number(item.personalLeave) || 0,
+          Number(item.unpaidLeave) || 0,
+          item.notes || null,
+          item.createdAt || null,
+          item.updatedAt || null,
+        ]
+      );
+    }
+    console.log(`Synced leave_allocations: ${collections.leave_allocations.length}`);
   }
 
   if (Array.isArray(collections.holidays)) {

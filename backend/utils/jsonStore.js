@@ -68,7 +68,9 @@ async function initDatabase() {
 
   const dataDir = path.join(__dirname, "..", "data");
   if (fs.existsSync(dataDir)) {
-    const files = fs.readdirSync(dataDir).filter((file) => file.endsWith(".json"));
+    const files = fs.readdirSync(dataDir).filter(
+      (file) => file.endsWith(".json") && file !== "leave_allocations.json"
+    );
     for (const file of files) {
       const key = path.basename(file, ".json");
       if (cache.has(key)) continue;
