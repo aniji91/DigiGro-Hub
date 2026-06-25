@@ -1,0 +1,29 @@
+[
+  {
+    "id": 1,
+    "title": "Follow up with Acme Corp",
+    "assignee": "admin",
+    "priority": "High",
+    "status": "Open",
+    "dueDate": "2026-06-25",
+    "createdAt": "2026-06-20T10:00:00.000Z"
+  },
+  {
+    "id": 2,
+    "title": "Prepare Q2 sales report",
+    "assignee": "admin",
+    "priority": "Medium",
+    "status": "In Progress",
+    "dueDate": "2026-06-30",
+    "createdAt": "2026-06-18T10:00:00.000Z"
+  },
+  {
+    "id": 3,
+    "title": "Schedule team onboarding",
+    "assignee": "hr",
+    "priority": "High",
+    "status": "Open",
+    "dueDate": "2026-06-28",
+    "createdAt": "2026-06-21T10:00:00.000Z"
+  }
+]

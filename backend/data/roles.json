@@ -1,0 +1,110 @@
+[
+  {
+    "id": 1,
+    "key": "superadmin",
+    "label": "Super Admin",
+    "description": "Full system access and configuration",
+    "color": "#8b5cf6",
+    "isSystem": true,
+    "assignableBy": [],
+    "modulePermissions": {
+      "clients": "crud",
+      "employees": "crud",
+      "projects": "crud",
+      "leaves": "crud",
+      "holidays": "crud",
+      "announcements": "crud",
+      "users": "crud",
+      "roles": "crud",
+      "settings": "read",
+      "workLogs": "read",
+      "chat": "crud"
+    },
+    "createdAt": "2026-01-01T00:00:00.000Z"
+  },
+  {
+    "id": 2,
+    "key": "admin",
+    "label": "Admin",
+    "description": "Manage employees, projects, and users",
+    "color": "#3b82f6",
+    "isSystem": true,
+    "assignableBy": [
+      "superadmin"
+    ],
+    "modulePermissions": {
+      "employees": "crud",
+      "projects": "crud",
+      "users": "cru",
+      "roles": "read",
+      "workLogs": "read",
+      "announcements": "read",
+      "chat": "read"
+    },
+    "createdAt": "2026-01-01T00:00:00.000Z"
+  },
+  {
+    "id": 3,
+    "key": "hr",
+    "label": "HR Manager",
+    "description": "Employee records, leave and holiday management",
+    "color": "#10b981",
+    "isSystem": true,
+    "assignableBy": [
+      "superadmin",
+      "admin"
+    ],
+    "modulePermissions": {
+      "employees": "cru",
+      "leaves": "crud",
+      "holidays": "crud",
+      "announcements": "crud",
+      "users": "cr",
+      "workLogs": "cru",
+      "chat": "read"
+    },
+    "createdAt": "2026-01-01T00:00:00.000Z"
+  },
+  {
+    "id": 4,
+    "key": "product_manager",
+    "label": "Project Manager",
+    "description": "Project planning and team coordination",
+    "color": "#f59e0b",
+    "isSystem": true,
+    "assignableBy": [
+      "superadmin",
+      "admin"
+    ],
+    "modulePermissions": {
+      "projects": "cru",
+      "employees": "read",
+      "workLogs": "cru",
+      "announcements": "read",
+      "chat": "crud"
+    },
+    "createdAt": "2026-01-01T00:00:00.000Z"
+  },
+  {
+    "id": 5,
+    "key": "employee",
+    "label": "Employee",
+    "description": "Assigned projects, work logs, and team chat",
+    "color": "#06b6d4",
+    "isSystem": true,
+    "assignableBy": [
+      "superadmin",
+      "admin",
+      "hr"
+    ],
+    "modulePermissions": {
+      "myProjects": "read",
+      "workLogs": "cru",
+      "leaves": "cru",
+      "holidays": "read",
+      "announcements": "read",
+      "chat": "read"
+    },
+    "createdAt": "2026-01-01T00:00:00.000Z"
+  }
+]

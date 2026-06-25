@@ -1,0 +1,29 @@
+[
+  {
+    "id": 1,
+    "name": "Sarah Johnson",
+    "email": "sarah@startup.io",
+    "source": "Website",
+    "status": "New",
+    "value": 15000,
+    "createdAt": "2026-04-01T10:00:00.000Z"
+  },
+  {
+    "id": 2,
+    "name": "Mike Chen",
+    "email": "mike@techco.com",
+    "source": "Referral",
+    "status": "Contacted",
+    "value": 28000,
+    "createdAt": "2026-04-05T10:00:00.000Z"
+  },
+  {
+    "id": 3,
+    "name": "Emily Davis",
+    "email": "emily@retail.com",
+    "source": "LinkedIn",
+    "status": "Qualified",
+    "value": 42000,
+    "createdAt": "2026-04-12T10:00:00.000Z"
+  }
+]

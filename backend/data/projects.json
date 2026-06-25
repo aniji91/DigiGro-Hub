@@ -1,0 +1,47 @@
+[
+  {
+    "id": 1,
+    "name": "Website Redesign",
+    "clientName": "Acme Corporation",
+    "description": "Complete website redesign and migration",
+    "status": "In Progress",
+    "startDate": "2026-05-01",
+    "endDate": "2026-08-30",
+    "assignedEmployeeIds": [
+      2,
+      3
+    ],
+    "clientId": 1
+  },
+  {
+    "id": 2,
+    "name": "ERP Integration",
+    "clientName": "Globex Industries",
+    "description": "Integrate ERP system with existing tools",
+    "status": "Planning",
+    "startDate": "2026-06-15",
+    "endDate": "2026-12-31",
+    "assignedEmployeeIds": [
+      3
+    ],
+    "createdAt": "2026-06-10T10:00:00.000Z"
+  },
+  {
+    "id": 3,
+    "description": "",
+    "endDate": "2026-06-30",
+    "assignedEmployeeIds": [
+      3,
+      5,
+      6,
+      4,
+      7
+    ],
+    "name": "MBM CRM",
+    "clientId": 2,
+    "clientName": "Globex",
+    "status": "In Progress",
+    "startDate": "2026-06-23",
+    "createdAt": "2026-06-23T12:27:52.318Z"
+  }
+]

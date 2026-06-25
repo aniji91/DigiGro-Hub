@@ -1,0 +1,29 @@
+[
+  {
+    "id": 1,
+    "title": "Enterprise License - Acme",
+    "customer": "Acme Corporation",
+    "stage": "Negotiation",
+    "value": 85000,
+    "probability": 70,
+    "createdAt": "2026-03-01T10:00:00.000Z"
+  },
+  {
+    "id": 2,
+    "title": "Annual Support - Globex",
+    "customer": "Globex Industries",
+    "stage": "Proposal",
+    "value": 32000,
+    "probability": 50,
+    "createdAt": "2026-03-15T10:00:00.000Z"
+  },
+  {
+    "id": 3,
+    "title": "Cloud Migration - Initech",
+    "customer": "Initech Solutions",
+    "stage": "Closed Won",
+    "value": 120000,
+    "probability": 100,
+    "createdAt": "2026-02-01T10:00:00.000Z"
+  }
+]

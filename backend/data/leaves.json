@@ -1,0 +1,24 @@
+[
+  {
+    "id": 1,
+    "employeeId": 2,
+    "employeeName": "Bob Smith",
+    "type": "Annual Leave",
+    "startDate": "2026-07-01",
+    "endDate": "2026-07-05",
+    "status": "Approved",
+    "reason": "Family vacation",
+    "createdAt": "2026-06-15T10:00:00.000Z"
+  },
+  {
+    "id": 2,
+    "employeeId": 3,
+    "employeeName": "Aniji Jacob",
+    "type": "Sick Leave",
+    "startDate": "2026-06-20",
+    "endDate": "2026-06-21",
+    "status": "Pending",
+    "reason": "Medical appointment",
+    "createdAt": "2026-06-18T10:00:00.000Z"
+  }
+]

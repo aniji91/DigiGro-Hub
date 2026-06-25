@@ -1,0 +1,98 @@
+[
+  {
+    "userId": 5,
+    "channelId": 3,
+    "lastReadAt": "2026-06-24T09:23:05.380Z",
+    "lastReadMessageId": 15
+  },
+  {
+    "userId": 1,
+    "channelId": 1,
+    "lastReadAt": "2026-06-25T05:41:40.942Z",
+    "lastReadMessageId": 2
+  },
+  {
+    "userId": 1,
+    "channelId": 3,
+    "lastReadAt": "2026-06-24T11:22:54.635Z",
+    "lastReadMessageId": 15
+  },
+  {
+    "userId": 1,
+    "channelId": 2,
+    "lastReadAt": "2026-06-24T06:52:58.763Z",
+    "lastReadMessageId": 4
+  },
+  {
+    "userId": 5,
+    "channelId": 2,
+    "lastReadAt": "2026-06-24T06:14:41.821Z",
+    "lastReadMessageId": 4
+  },
+  {
+    "userId": 5,
+    "channelId": 1,
+    "lastReadAt": "2026-06-24T12:52:32.060Z",
+    "lastReadMessageId": 2
+  },
+  {
+    "userId": 5,
+    "channelId": 6,
+    "lastReadAt": "2026-06-24T07:12:57.494Z",
+    "lastReadMessageId": 13
+  },
+  {
+    "userId": 10,
+    "channelId": 2,
+    "lastReadAt": "2026-06-24T09:22:06.759Z",
+    "lastReadMessageId": 4
+  },
+  {
+    "userId": 10,
+    "channelId": 6,
+    "lastReadAt": "2026-06-24T07:13:22.889Z",
+    "lastReadMessageId": 13
+  },
+  {
+    "userId": 10,
+    "channelId": 3,
+    "lastReadAt": "2026-06-24T09:21:38.180Z",
+    "lastReadMessageId": 15
+  },
+  {
+    "userId": 1,
+    "channelId": 9,
+    "lastReadAt": "2026-06-24T07:09:57.817Z",
+    "lastReadMessageId": 12
+  },
+  {
+    "userId": 5,
+    "channelId": 9,
+    "lastReadAt": "2026-06-24T07:10:21.104Z",
+    "lastReadMessageId": 12
+  },
+  {
+    "userId": 3,
+    "channelId": 2,
+    "lastReadAt": "2026-06-24T12:12:02.117Z",
+    "lastReadMessageId": 4
+  },
+  {
+    "userId": 4,
+    "channelId": 1,
+    "lastReadAt": "2026-06-25T06:38:14.877Z",
+    "lastReadMessageId": 2
+  },
+  {
+    "userId": 4,
+    "channelId": 2,
+    "lastReadAt": "2026-06-25T06:38:16.164Z",
+    "lastReadMessageId": 4
+  },
+  {
+    "userId": 4,
+    "channelId": 3,
+    "lastReadAt": "2026-06-25T06:43:32.937Z",
+    "lastReadMessageId": 15
+  }
+]

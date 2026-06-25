@@ -1,0 +1,14 @@
+[
+  {
+    "id": 1,
+    "projectId": 1,
+    "projectName": "Website Redesign",
+    "date": "2026-06-25",
+    "type": "discussion",
+    "content": "started",
+    "authorId": 1,
+    "authorName": "Super Admin",
+    "authorRole": "superadmin",
+    "createdAt": "2026-06-25T06:06:16.273Z"
+  }
+]

@@ -1,0 +1,314 @@
+[
+  {
+    "id": 1,
+    "projectId": 1,
+    "projectName": "Website Redesign",
+    "employeeId": 2,
+    "status": "pending",
+    "steps": [
+      {
+        "stepId": 1,
+        "title": "Review project brief",
+        "description": "Read the project description, timeline, and objectives",
+        "action": "review_brief",
+        "completedAt": null
+      },
+      {
+        "stepId": 2,
+        "title": "Acknowledge project guidelines",
+        "description": "Confirm you understand team expectations and delivery standards",
+        "action": "acknowledge",
+        "completedAt": null
+      },
+      {
+        "stepId": 3,
+        "title": "Join project team chat",
+        "description": "Introduce yourself in the project channel or direct chat",
+        "action": "join_chat",
+        "completedAt": null
+      },
+      {
+        "stepId": 4,
+        "title": "Log your first work update",
+        "description": "Submit your first daily work log for this project",
+        "action": "first_work_log",
+        "completedAt": null
+      }
+    ],
+    "createdAt": "2026-06-24T09:19:49.958Z",
+    "completedAt": null
+  },
+  {
+    "id": 2,
+    "projectId": 1,
+    "projectName": "Website Redesign",
+    "employeeId": 3,
+    "status": "completed",
+    "steps": [
+      {
+        "stepId": 1,
+        "title": "Review project brief",
+        "description": "Read the project description, timeline, and objectives",
+        "action": "review_brief",
+        "completedAt": "2026-06-24T11:55:41.174Z"
+      },
+      {
+        "stepId": 2,
+        "title": "Acknowledge project guidelines",
+        "description": "Confirm you understand team expectations and delivery standards",
+        "action": "acknowledge",
+        "completedAt": "2026-06-24T11:55:41.783Z"
+      },
+      {
+        "stepId": 3,
+        "title": "Join project team chat",
+        "description": "Introduce yourself in the project channel or direct chat",
+        "action": "join_chat",
+        "completedAt": "2026-06-24T11:55:42.312Z"
+      },
+      {
+        "stepId": 4,
+        "title": "Log your first work update",
+        "description": "Submit your first daily work log for this project",
+        "action": "first_work_log",
+        "completedAt": "2026-06-24T11:56:40.323Z"
+      }
+    ],
+    "createdAt": "2026-06-24T09:19:49.960Z",
+    "completedAt": "2026-06-24T11:56:40.323Z"
+  },
+  {
+    "id": 3,
+    "projectId": 2,
+    "projectName": "ERP Integration",
+    "employeeId": 3,
+    "status": "completed",
+    "steps": [
+      {
+        "stepId": 1,
+        "title": "Review project brief",
+        "description": "Read the project description, timeline, and objectives",
+        "action": "review_brief",
+        "completedAt": "2026-06-24T11:56:11.730Z"
+      },
+      {
+        "stepId": 2,
+        "title": "Acknowledge project guidelines",
+        "description": "Confirm you understand team expectations and delivery standards",
+        "action": "acknowledge",
+        "completedAt": "2026-06-24T11:56:12.531Z"
+      },
+      {
+        "stepId": 3,
+        "title": "Join project team chat",
+        "description": "Introduce yourself in the project channel or direct chat",
+        "action": "join_chat",
+        "completedAt": "2026-06-24T11:56:13.368Z"
+      },
+      {
+        "stepId": 4,
+        "title": "Log your first work update",
+        "description": "Submit your first daily work log for this project",
+        "action": "first_work_log",
+        "completedAt": "2026-06-24T11:57:05.847Z"
+      }
+    ],
+    "createdAt": "2026-06-24T09:19:50.025Z",
+    "completedAt": "2026-06-24T11:57:05.847Z"
+  },
+  {
+    "id": 4,
+    "projectId": 3,
+    "projectName": "MBM CRM",
+    "employeeId": 3,
+    "status": "completed",
+    "steps": [
+      {
+        "stepId": 1,
+        "title": "Review project brief",
+        "description": "Read the project description, timeline, and objectives",
+        "action": "review_brief",
+        "completedAt": "2026-06-24T11:57:12.597Z"
+      },
+      {
+        "stepId": 2,
+        "title": "Acknowledge project guidelines",
+        "description": "Confirm you understand team expectations and delivery standards",
+        "action": "acknowledge",
+        "completedAt": "2026-06-24T11:57:13.290Z"
+      },
+      {
+        "stepId": 3,
+        "title": "Join project team chat",
+        "description": "Introduce yourself in the project channel or direct chat",
+        "action": "join_chat",
+        "completedAt": "2026-06-24T11:57:13.878Z"
+      },
+      {
+        "stepId": 4,
+        "title": "Log your first work update",
+        "description": "Submit your first daily work log for this project",
+        "action": "first_work_log",
+        "completedAt": "2026-06-24T11:57:27.635Z"
+      }
+    ],
+    "createdAt": "2026-06-24T09:19:50.056Z",
+    "completedAt": "2026-06-24T11:57:27.635Z"
+  },
+  {
+    "id": 5,
+    "projectId": 3,
+    "projectName": "MBM CRM",
+    "employeeId": 5,
+    "status": "pending",
+    "steps": [
+      {
+        "stepId": 1,
+        "title": "Review project brief",
+        "description": "Read the project description, timeline, and objectives",
+        "action": "review_brief",
+        "completedAt": null
+      },
+      {
+        "stepId": 2,
+        "title": "Acknowledge project guidelines",
+        "description": "Confirm you understand team expectations and delivery standards",
+        "action": "acknowledge",
+        "completedAt": null
+      },
+      {
+        "stepId": 3,
+        "title": "Join project team chat",
+        "description": "Introduce yourself in the project channel or direct chat",
+        "action": "join_chat",
+        "completedAt": null
+      },
+      {
+        "stepId": 4,
+        "title": "Log your first work update",
+        "description": "Submit your first daily work log for this project",
+        "action": "first_work_log",
+        "completedAt": null
+      }
+    ],
+    "createdAt": "2026-06-24T09:19:50.056Z",
+    "completedAt": null
+  },
+  {
+    "id": 6,
+    "projectId": 3,
+    "projectName": "MBM CRM",
+    "employeeId": 6,
+    "status": "pending",
+    "steps": [
+      {
+        "stepId": 1,
+        "title": "Review project brief",
+        "description": "Read the project description, timeline, and objectives",
+        "action": "review_brief",
+        "completedAt": null
+      },
+      {
+        "stepId": 2,
+        "title": "Acknowledge project guidelines",
+        "description": "Confirm you understand team expectations and delivery standards",
+        "action": "acknowledge",
+        "completedAt": null
+      },
+      {
+        "stepId": 3,
+        "title": "Join project team chat",
+        "description": "Introduce yourself in the project channel or direct chat",
+        "action": "join_chat",
+        "completedAt": null
+      },
+      {
+        "stepId": 4,
+        "title": "Log your first work update",
+        "description": "Submit your first daily work log for this project",
+        "action": "first_work_log",
+        "completedAt": null
+      }
+    ],
+    "createdAt": "2026-06-24T09:19:50.056Z",
+    "completedAt": null
+  },
+  {
+    "id": 7,
+    "projectId": 3,
+    "projectName": "MBM CRM",
+    "employeeId": 4,
+    "status": "pending",
+    "steps": [
+      {
+        "stepId": 1,
+        "title": "Review project brief",
+        "description": "Read the project description, timeline, and objectives",
+        "action": "review_brief",
+        "completedAt": null
+      },
+      {
+        "stepId": 2,
+        "title": "Acknowledge project guidelines",
+        "description": "Confirm you understand team expectations and delivery standards",
+        "action": "acknowledge",
+        "completedAt": null
+      },
+      {
+        "stepId": 3,
+        "title": "Join project team chat",
+        "description": "Introduce yourself in the project channel or direct chat",
+        "action": "join_chat",
+        "completedAt": null
+      },
+      {
+        "stepId": 4,
+        "title": "Log your first work update",
+        "description": "Submit your first daily work log for this project",
+        "action": "first_work_log",
+        "completedAt": null
+      }
+    ],
+    "createdAt": "2026-06-24T09:19:50.056Z",
+    "completedAt": null
+  },
+  {
+    "id": 8,
+    "projectId": 3,
+    "projectName": "MBM CRM",
+    "employeeId": 7,
+    "status": "completed",
+    "steps": [
+      {
+        "stepId": 1,
+        "title": "Review project brief",
+        "description": "Read the project description, timeline, and objectives",
+        "action": "review_brief",
+        "completedAt": "2026-06-24T09:21:56.776Z"
+      },
+      {
+        "stepId": 2,
+        "title": "Acknowledge project guidelines",
+        "description": "Confirm you understand team expectations and delivery standards",
+        "action": "acknowledge",
+        "completedAt": "2026-06-24T09:22:21.030Z"
+      },
+      {
+        "stepId": 3,
+        "title": "Join project team chat",
+        "description": "Introduce yourself in the project channel or direct chat",
+        "action": "join_chat",
+        "completedAt": "2026-06-24T09:22:02.541Z"
+      },
+      {
+        "stepId": 4,
+        "title": "Log your first work update",
+        "description": "Submit your first daily work log for this project",
+        "action": "first_work_log",
+        "completedAt": "2026-06-24T09:22:42.482Z"
+      }
+    ],
+    "createdAt": "2026-06-24T09:19:50.056Z",
+    "completedAt": "2026-06-24T09:22:42.482Z"
+  }
+]

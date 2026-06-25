@@ -1,0 +1,78 @@
+[
+  {
+    "id": 1,
+    "username": "superadmin",
+    "passwordHash": "$2b$10$ZybD23Cct/6LoUi8JV58hekXIcv2bK7neeEKacB/ZCsF.V4RV//86",
+    "role": "superadmin",
+    "name": "Super Admin"
+  },
+  {
+    "id": 2,
+    "username": "admin",
+    "passwordHash": "$2b$10$MshZYIf1Zsy.Z7oR/O4mSergp9XHpeyyzlXPK3B82XiJREx3jWM66",
+    "role": "admin",
+    "name": "System Admin"
+  },
+  {
+    "id": 3,
+    "username": "hr",
+    "passwordHash": "$2b$10$kw2AVcGQvAj8bqrUZAkx0O526We57OoerFTEssIM4hugGLLiliyBK",
+    "role": "hr",
+    "name": "HR Manager"
+  },
+  {
+    "id": 4,
+    "username": "pm",
+    "passwordHash": "$2b$10$KzBdMsRyHNysL5XhBoiCR.ZNEGi9m7zi7eE4ZqhXuHM4PU0VD5DoK",
+    "role": "product_manager",
+    "name": "Product Manager"
+  },
+  {
+    "id": 5,
+    "username": "aniji",
+    "passwordHash": "$2b$10$Fqd7ghKRPCKI0jLeNFaD6eF9.IOkdZFEDjYCvqBm9D7LTASadLwd6",
+    "role": "employee",
+    "name": "Aniji Jacob",
+    "employeeId": 3
+  },
+  {
+    "id": 6,
+    "username": "bob",
+    "passwordHash": "$2b$10$Fqd7ghKRPCKI0jLeNFaD6eF9.IOkdZFEDjYCvqBm9D7LTASadLwd6",
+    "role": "employee",
+    "name": "Bob Smith",
+    "employeeId": 2
+  },
+  {
+    "id": 7,
+    "username": "harish",
+    "passwordHash": "$2b$10$Y4VH9k.JtTfs3cquoFGQFutDbifJyZ5ET3ro0IkhX1tRcKqtKL0lW",
+    "role": "product_manager",
+    "name": "Harish",
+    "employeeId": 4
+  },
+  {
+    "id": 8,
+    "username": "kallol",
+    "passwordHash": "$2b$10$.F.grtJ1ke20JEUnhgXQx.UcG7.4W1XdhsQ9pqZ6vt0j.j3y71zb2",
+    "role": "product_manager",
+    "name": "Kallol Dutta",
+    "employeeId": 5
+  },
+  {
+    "id": 9,
+    "username": "arvind",
+    "passwordHash": "$2b$10$FXdQOh5T4.xzGSoMypFjcujTSsPmNqUyQypy0J/HBKbGxfctKX6IC",
+    "role": "employee",
+    "name": "Arvind Kumar",
+    "employeeId": 6
+  },
+  {
+    "id": 10,
+    "username": "anurag",
+    "passwordHash": "$2b$10$97XBlCfD8BSVGFgdGYTdSu2h6aSQ7ToRfIN/obs6SI6So5pHg/aIe",
+    "role": "employee",
+    "name": "Anurag Ahuja",
+    "employeeId": 7
+  }
+]

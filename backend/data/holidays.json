@@ -1,0 +1,58 @@
+[
+  {
+    "id": 1,
+    "name": "New Year's Day",
+    "date": "2026-01-01",
+    "type": "Public Holiday",
+    "description": "Office closed",
+    "createdAt": "2026-01-01T10:00:00.000Z"
+  },
+  {
+    "id": 2,
+    "name": "Republic Day",
+    "date": "2026-01-26",
+    "type": "Public Holiday",
+    "description": "National holiday",
+    "createdAt": "2026-01-01T10:00:00.000Z"
+  },
+  {
+    "id": 3,
+    "name": "Good Friday",
+    "date": "2026-04-03",
+    "type": "Public Holiday",
+    "description": "",
+    "createdAt": "2026-01-01T10:00:00.000Z"
+  },
+  {
+    "id": 4,
+    "name": "Labour Day",
+    "date": "2026-05-01",
+    "type": "Public Holiday",
+    "description": "International Workers' Day",
+    "createdAt": "2026-01-01T10:00:00.000Z"
+  },
+  {
+    "id": 5,
+    "name": "Independence Day",
+    "date": "2026-08-15",
+    "type": "Public Holiday",
+    "description": "National holiday",
+    "createdAt": "2026-01-01T10:00:00.000Z"
+  },
+  {
+    "id": 6,
+    "name": "Diwali",
+    "date": "2026-11-08",
+    "type": "Public Holiday",
+    "description": "Festival of lights",
+    "createdAt": "2026-01-01T10:00:00.000Z"
+  },
+  {
+    "id": 7,
+    "name": "Christmas",
+    "date": "2026-12-25",
+    "type": "Public Holiday",
+    "description": "Office closed",
+    "createdAt": "2026-01-01T10:00:00.000Z"
+  }
+]

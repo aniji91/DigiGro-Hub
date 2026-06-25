@@ -1,0 +1,62 @@
+[
+  {
+    "id": 3,
+    "name": "Aniji Jacob",
+    "email": "aniji@digigro.tech",
+    "department": "IT",
+    "position": "Software Developer",
+    "salary": null,
+    "dob": "1992-06-23",
+    "joiningDate": "2024-06-23",
+    "documents": [],
+    "emergencyContacts": []
+  },
+  {
+    "id": 4,
+    "name": "Harish",
+    "email": "harish@digigro.tech ",
+    "department": "IT",
+    "position": "Client Account Manager",
+    "salary": null,
+    "dob": "1988-07-15",
+    "joiningDate": "2023-03-10",
+    "documents": [],
+    "emergencyContacts": []
+  },
+  {
+    "id": 5,
+    "name": "Kallol Dutta",
+    "email": "kallol@digigro.tech ",
+    "department": "IT",
+    "position": "Project Manager UI/UX",
+    "salary": null,
+    "dob": "1990-06-28",
+    "joiningDate": "2022-06-23",
+    "documents": [],
+    "emergencyContacts": []
+  },
+  {
+    "id": 6,
+    "name": "Arvind Kumar",
+    "email": "arvind@digigro.tech",
+    "department": "IT",
+    "position": "Senior Software Developer",
+    "salary": null,
+    "dob": "1991-12-05",
+    "joiningDate": "2021-06-23",
+    "documents": [],
+    "emergencyContacts": []
+  },
+  {
+    "id": 7,
+    "name": "Anurag Ahuja",
+    "email": "anurag@digigro.tech ",
+    "department": "IT",
+    "position": "W3 Manager & Senior Web Developer",
+    "salary": null,
+    "dob": "1989-06-25",
+    "joiningDate": "2020-06-23",
+    "documents": [],
+    "emergencyContacts": []
+  }
+]
