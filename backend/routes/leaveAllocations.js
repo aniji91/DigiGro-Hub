@@ -34,25 +34,31 @@ function usedDaysByType(leaves, employeeId, year) {
 
   leaves.forEach((leave) => {
     if (leave.employeeId !== employeeId || leave.status !== "Approved") return;
-    if (!leave.startDate?.startsWith(String(year))) return;
+    const startDate = String(leave.startDate || "");
+    if (!startDate.startsWith(String(year))) return;
     if (!LEAVE_TYPES.includes(leave.type)) return;
-    used[leave.type] += daysInclusive(leave.startDate, leave.endDate);
+    used[leave.type] += daysInclusive(startDate, String(leave.endDate || startDate));
   });
 
   return used;
 }
 
 function enrichAllocation(allocation, leaves) {
-  const used = usedDaysByType(leaves, allocation.employeeId, allocation.year);
-  const remaining = {};
+  try {
+    const used = usedDaysByType(leaves, allocation.employeeId, allocation.year);
+    const remaining = {};
 
-  LEAVE_TYPES.forEach((type) => {
-    const field = TYPE_FIELDS[type];
-    const allocated = Number(allocation[field] || 0);
-    remaining[type] = Math.max(allocated - used[type], 0);
-  });
+    LEAVE_TYPES.forEach((type) => {
+      const field = TYPE_FIELDS[type];
+      const allocated = Number(allocation[field] || 0);
+      remaining[type] = Math.max(allocated - used[type], 0);
+    });
 
-  return { ...allocation, used, remaining };
+    return { ...allocation, used, remaining };
+  } catch (err) {
+    console.error("enrichAllocation failed:", err.message);
+    return { ...allocation, used: {}, remaining: {} };
+  }
 }
 
 function requireMysql(res) {
@@ -62,6 +68,29 @@ function requireMysql(res) {
   }
   return true;
 }
+
+router.get("/diag", authenticate, authorize(...MANAGERS), async (req, res) => {
+  const { getPool } = require("../db/pool");
+  const result = {
+    mysql: leaveAllocationStore.isMysqlEnabled(),
+    database: process.env.DB_NAME || null,
+  };
+
+  try {
+    const pool = getPool();
+    const [rows] = await pool.query("SELECT COUNT(*) AS total FROM leave_allocations");
+    result.table = "ok";
+    result.total = Number(rows[0].total);
+    const [sample] = await pool.query("SELECT * FROM leave_allocations LIMIT 1");
+    result.sample = sample[0] || null;
+    res.json(result);
+  } catch (err) {
+    result.table = "error";
+    result.code = err.code || null;
+    result.message = err.message;
+    res.status(500).json(result);
+  }
+});
 
 router.use(authenticate);
 

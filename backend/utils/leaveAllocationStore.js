@@ -22,17 +22,7 @@ let migrationDone = false;
 
 async function ensureTable() {
   const pool = getPool();
-  try {
-    await pool.query("SELECT 1 FROM leave_allocations LIMIT 1");
-    tableReady = true;
-    return;
-  } catch (err) {
-    if (err.code !== "ER_NO_SUCH_TABLE") {
-      throw err;
-    }
-  }
-
-  await pool.query(ENSURE_TABLE_SQL);
+  await pool.query("SELECT 1 FROM leave_allocations LIMIT 1");
   tableReady = true;
 }
 
@@ -42,19 +32,25 @@ async function ensureReady() {
   }
 }
 
+function safeIso(value) {
+  if (!value) return null;
+  const date = value instanceof Date ? value : new Date(value);
+  return Number.isNaN(date.getTime()) ? null : date.toISOString();
+}
+
 function rowToAllocation(row) {
   return {
-    id: row.id,
-    employeeId: row.employee_id,
+    id: Number(row.id),
+    employeeId: Number(row.employee_id),
     employeeName: row.employee_name,
-    year: row.year,
-    annualLeave: row.annual_leave,
-    sickLeave: row.sick_leave,
-    personalLeave: row.personal_leave,
-    unpaidLeave: row.unpaid_leave,
+    year: Number(row.year),
+    annualLeave: Number(row.annual_leave ?? 0),
+    sickLeave: Number(row.sick_leave ?? 0),
+    personalLeave: Number(row.personal_leave ?? 0),
+    unpaidLeave: Number(row.unpaid_leave ?? 0),
     notes: row.notes || "",
-    createdAt: row.created_at ? new Date(row.created_at).toISOString() : null,
-    updatedAt: row.updated_at ? new Date(row.updated_at).toISOString() : null,
+    createdAt: safeIso(row.created_at),
+    updatedAt: safeIso(row.updated_at),
   };
 }
 
