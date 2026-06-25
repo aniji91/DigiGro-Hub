@@ -6,9 +6,18 @@ function isMysqlEnabled() {
   return process.env.USE_MYSQL === "true";
 }
 
+function resolveDbHost() {
+  const host = (process.env.DB_HOST || "127.0.0.1").trim();
+  // Hostinger MySQL users are often granted only for 127.0.0.1, not IPv6 ::1
+  if (host.toLowerCase() === "localhost") {
+    return "127.0.0.1";
+  }
+  return host;
+}
+
 function getDbConfig() {
   return {
-    host: process.env.DB_HOST || "127.0.0.1",
+    host: resolveDbHost(),
     port: Number(process.env.DB_PORT || 3306),
     user: process.env.DB_USER || "root",
     password: process.env.DB_PASSWORD || "",
