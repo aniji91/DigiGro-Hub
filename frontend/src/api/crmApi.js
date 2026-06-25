@@ -37,6 +37,14 @@ export function createApi(resource) {
 export const clientsApi = createApi("clients");
 export const projectsApi = createApi("projects");
 export const leavesApi = createApi("leaves");
+export const leaveAllocationsApi = createApi("leave-allocations");
+
+export async function fetchLeaveAllocations(year = new Date().getFullYear()) {
+  const response = await fetch(`${API_BASE}/leave-allocations?year=${year}`, {
+    headers: getAuthHeaders(),
+  });
+  return handleResponse(response);
+}
 export const workLogsApi = createApi("work-logs");
 export const holidaysApi = createApi("holidays");
 export const announcementsApi = createApi("announcements");

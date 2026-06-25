@@ -23,7 +23,7 @@ router.get("/", (req, res) => {
     return res.json(leaves.filter((l) => l.employeeId === req.user.employeeId));
   }
 
-  if (["superadmin", "hr"].includes(req.user.role)) {
+  if (["superadmin", "admin", "hr"].includes(req.user.role)) {
     return res.json(leaves);
   }
 
@@ -60,7 +60,7 @@ router.post("/", (req, res) => {
     return res.status(201).json(newLeave);
   }
 
-  if (!["superadmin", "hr"].includes(req.user.role)) {
+  if (!["superadmin", "admin", "hr"].includes(req.user.role)) {
     return res.status(403).json({ error: "Access denied" });
   }
 
@@ -119,7 +119,7 @@ router.put("/:id", (req, res) => {
     return res.json(leaves[index]);
   }
 
-  if (!["superadmin", "hr"].includes(req.user.role)) {
+  if (!["superadmin", "admin", "hr"].includes(req.user.role)) {
     return res.status(403).json({ error: "Access denied" });
   }
 
@@ -140,7 +140,7 @@ router.put("/:id", (req, res) => {
   res.json(leaves[index]);
 });
 
-router.delete("/:id", authorize("superadmin", "hr"), (req, res) => {
+router.delete("/:id", authorize("superadmin", "admin", "hr"), (req, res) => {
   const leaves = readLeaves();
   const index = leaves.findIndex((l) => l.id === Number(req.params.id));
 

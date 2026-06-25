@@ -69,7 +69,7 @@ export const MENU_ITEMS = [
     label: "Leave Management",
     path: "/leaves",
     icon: CalendarDays,
-    roles: ["superadmin", "hr"],
+    roles: ["superadmin", "admin", "hr"],
   },
   {
     key: "myLeaves",

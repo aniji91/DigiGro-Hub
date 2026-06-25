@@ -16,6 +16,7 @@ const MODULE_ACCESS = {
     employees: "crud",
     projects: "crud",
     users: "cru",
+    leaves: "crud",
     roles: "read",
     workLogs: "read",
     announcements: "read",
