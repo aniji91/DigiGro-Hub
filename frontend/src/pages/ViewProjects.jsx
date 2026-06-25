@@ -92,6 +92,22 @@ export default function ViewProjects() {
       .toUpperCase();
   }
 
+  function selectFilter(nextFilter) {
+    setFilterType(nextFilter);
+    if (editing) return;
+
+    if (nextFilter === "discussion") {
+      setForm((prev) => ({ ...prev, type: "discussion" }));
+      return;
+    }
+
+    setForm((prev) => ({
+      ...prev,
+      type: "status",
+      taskStatus: prev.taskStatus || "New",
+    }));
+  }
+
   async function loadProjects() {
     const isEmployee = user?.role === "employee";
     const [projectData, employeeData] = await Promise.all([
@@ -348,21 +364,21 @@ export default function ViewProjects() {
                     <button
                       type="button"
                       className={`filter-chip ${filterType === "all" ? "active" : ""}`}
-                      onClick={() => setFilterType("all")}
+                      onClick={() => selectFilter("all")}
                     >
                       All ({updates.length})
                     </button>
                     <button
                       type="button"
                       className={`filter-chip ${filterType === "status" ? "active" : ""}`}
-                      onClick={() => setFilterType("status")}
+                      onClick={() => selectFilter("status")}
                     >
                       <ListTodo size={14} /> Daily Tasks ({taskCount})
                     </button>
                     <button
                       type="button"
                       className={`filter-chip ${filterType === "discussion" ? "active" : ""}`}
-                      onClick={() => setFilterType("discussion")}
+                      onClick={() => selectFilter("discussion")}
                     >
                       <MessageSquareText size={14} /> Discussion ({discussionCount})
                     </button>
@@ -394,6 +410,9 @@ export default function ViewProjects() {
                             type: nextType,
                             taskStatus: nextType === "status" ? form.taskStatus || "New" : "New",
                           });
+                          if (!editing) {
+                            setFilterType(nextType);
+                          }
                         }}
                         required
                       >
