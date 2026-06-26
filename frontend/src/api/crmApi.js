@@ -79,6 +79,15 @@ export async function fetchMyProjects() {
   return handleResponse(response);
 }
 
+export async function updateProjectEnvironment(projectId, body) {
+  const response = await fetch(`${API_BASE}/projects/${projectId}/environment`, {
+    method: "PATCH",
+    headers: getAuthHeaders(),
+    body: JSON.stringify(body),
+  });
+  return handleResponse(response);
+}
+
 export async function fetchMyOnboarding() {
   const response = await fetch(`${API_BASE}/project-onboarding`, {
     headers: getAuthHeaders(),

@@ -273,6 +273,105 @@
   margin-bottom: 0.75rem;
 }
 
+.project-env-details {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.project-env-toolbar {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.project-env-hint {
+  margin: 0;
+  font-size: 0.82rem;
+  flex: 1;
+  min-width: 180px;
+}
+
+.project-env-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+.env-panels {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.env-panel {
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 0.75rem 0.85rem;
+}
+
+.env-panel h4 {
+  margin: 0 0 0.65rem;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #374151;
+}
+
+.env-detail-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.env-detail-row {
+  display: grid;
+  grid-template-columns: 120px 1fr;
+  gap: 0.5rem;
+  align-items: start;
+  font-size: 0.82rem;
+}
+
+.env-detail-row span {
+  color: var(--text-muted);
+}
+
+.env-detail-row--full {
+  grid-template-columns: 1fr;
+}
+
+.env-detail-row--full span {
+  display: block;
+  margin-bottom: 0.15rem;
+}
+
+.env-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+.env-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+
+.env-form input,
+.env-form textarea {
+  font-size: 0.84rem;
+}
+
+@media (max-width: 900px) {
+  .env-panels {
+    grid-template-columns: 1fr;
+  }
+}
+
 .project-view-hero {
   display: flex;
   flex-direction: column;

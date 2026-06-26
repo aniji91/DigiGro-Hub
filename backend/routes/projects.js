@@ -2,7 +2,7 @@ const express = require("express");
 const { authenticate } = require("../middleware/auth");
 const authorize = require("../middleware/authorize");
 const { readData, writeData, dataPath, nextId } = require("../utils/jsonStore");
-const { normalizeProject } = require("../utils/projectFields");
+const { normalizeProject, normalizeEnvironmentDetails } = require("../utils/projectFields");
 const { syncOnboardingForProject } = require("../utils/projectOnboarding");
 
 const router = express.Router();
@@ -10,6 +10,12 @@ const FILE = dataPath("projects.json");
 const CREATE_ROLES = ["superadmin", "admin", "product_manager"];
 const UPDATE_ROLES = ["superadmin", "admin", "product_manager"];
 const DELETE_ROLES = ["superadmin", "admin"];
+
+function canUpdateEnvironment(user, project) {
+  if (UPDATE_ROLES.includes(user.role)) return true;
+  if (!user.employeeId) return false;
+  return (project.assignedEmployeeIds || []).includes(user.employeeId);
+}
 
 function readProjects() {
   return readData(FILE);
@@ -63,6 +69,26 @@ router.put("/:id", authorize(...UPDATE_ROLES), (req, res) => {
 
   writeProjects(projects);
   syncOnboardingForProject(projects[index]);
+  res.json(projects[index]);
+});
+
+router.patch("/:id/environment", (req, res) => {
+  const projects = readProjects();
+  const index = projects.findIndex((p) => p.id === Number(req.params.id));
+  if (index === -1) return res.status(404).json({ error: "Not found" });
+
+  const project = projects[index];
+  if (!canUpdateEnvironment(req.user, project)) {
+    return res.status(403).json({ error: "Not allowed to update environment details" });
+  }
+
+  projects[index] = {
+    ...project,
+    stagingDetails: normalizeEnvironmentDetails(req.body.stagingDetails, project.stagingDetails),
+    productionDetails: normalizeEnvironmentDetails(req.body.productionDetails, project.productionDetails),
+  };
+
+  writeProjects(projects);
   res.json(projects[index]);
 });
 

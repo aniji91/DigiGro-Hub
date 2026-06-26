@@ -6,6 +6,7 @@ import { fetchMyProjects, fetchProjectUpdates, projectUpdatesApi, projectsApi } 
 import { fetchEmployees } from "../api/employeeApi";
 import { PROJECT_TYPE_LABELS } from "../config/projectConfig";
 import { ProjectBriefDetails } from "../components/ProjectBriefDetails";
+import { ProjectEnvironmentDetails } from "../components/ProjectEnvironmentDetails";
 
 const today = () => new Date().toISOString().slice(0, 10);
 
@@ -109,6 +110,10 @@ export default function ViewProjects() {
       type: "status",
       taskStatus: prev.taskStatus || "New",
     }));
+  }
+
+  function handleProjectSaved(updated) {
+    setProjects((prev) => prev.map((p) => (p.id === updated.id ? { ...p, ...updated } : p)));
   }
 
   async function loadProjects() {
@@ -372,6 +377,14 @@ export default function ViewProjects() {
               <details className="project-view-details-collapsible">
                 <summary>Project details</summary>
                 <ProjectBriefDetails project={selectedProject} hideOverview />
+              </details>
+
+              <details className="project-view-details-collapsible">
+                <summary>Staging &amp; production details</summary>
+                <ProjectEnvironmentDetails
+                  project={selectedProject}
+                  onSaved={handleProjectSaved}
+                />
               </details>
 
               <section className="project-view-updates">

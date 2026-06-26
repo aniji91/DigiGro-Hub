@@ -20,6 +20,23 @@ function normalizeDocuments(documents) {
     }));
 }
 
+function normalizeEnvironmentDetails(body, existing = {}) {
+  const source = body && typeof body === "object" ? body : {};
+  return {
+    siteUrl: source.siteUrl !== undefined ? (source.siteUrl || "").trim() : existing.siteUrl || "",
+    domainDetails:
+      source.domainDetails !== undefined
+        ? (source.domainDetails || "").trim()
+        : existing.domainDetails || "",
+    hostingDetails:
+      source.hostingDetails !== undefined
+        ? (source.hostingDetails || "").trim()
+        : existing.hostingDetails || "",
+    ftpDetails:
+      source.ftpDetails !== undefined ? (source.ftpDetails || "").trim() : existing.ftpDetails || "",
+  };
+}
+
 function normalizeProject(body, existing = {}) {
   const assignedEmployeeIds =
     body.assignedEmployeeIds !== undefined
@@ -58,6 +75,14 @@ function normalizeProject(body, existing = {}) {
         : existing.techPreferences || "",
     documents:
       body.documents !== undefined ? normalizeDocuments(body.documents) : existing.documents || [],
+    stagingDetails:
+      body.stagingDetails !== undefined
+        ? normalizeEnvironmentDetails(body.stagingDetails, existing.stagingDetails)
+        : existing.stagingDetails || normalizeEnvironmentDetails(),
+    productionDetails:
+      body.productionDetails !== undefined
+        ? normalizeEnvironmentDetails(body.productionDetails, existing.productionDetails)
+        : existing.productionDetails || normalizeEnvironmentDetails(),
   };
 }
 
@@ -65,4 +90,5 @@ module.exports = {
   normalizeProject,
   normalizeReferenceSites,
   normalizeDocuments,
+  normalizeEnvironmentDetails,
 };

@@ -141,8 +141,9 @@ async function syncNormalizedTables(connection) {
         `INSERT INTO projects
          (id, name, client_name, client_id, description, status, start_date, end_date,
           assigned_employee_ids, project_type, existing_site_url, reference_sites, suggestions,
-          target_audience, page_scope, tech_preferences, documents, created_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          target_audience, page_scope, tech_preferences, documents, staging_details,
+          production_details, created_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
           item.id,
           item.name,
@@ -161,6 +162,8 @@ async function syncNormalizedTables(connection) {
           item.pageScope || null,
           item.techPreferences || null,
           JSON.stringify(item.documents || []),
+          JSON.stringify(item.stagingDetails || null),
+          JSON.stringify(item.productionDetails || null),
           item.createdAt || null,
         ]
       );

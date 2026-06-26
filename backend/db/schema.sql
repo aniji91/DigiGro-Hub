@@ -71,6 +71,8 @@ CREATE TABLE IF NOT EXISTS projects (
   page_scope TEXT NULL,
   tech_preferences TEXT NULL,
   documents JSON NULL,
+  staging_details JSON NULL,
+  production_details JSON NULL,
   created_at DATETIME NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
