@@ -373,19 +373,22 @@ export default function ViewProjects() {
               </div>
             </header>
 
-            <div className="project-view-body project-view-body--stacked">
-              <details className="project-view-details-collapsible">
-                <summary>Project details</summary>
-                <ProjectBriefDetails project={selectedProject} hideOverview />
-              </details>
+            <div className="project-view-body">
+              <aside className="project-view-side">
+                <details className="project-view-details-collapsible">
+                  <summary>Project details</summary>
+                  <ProjectBriefDetails project={selectedProject} hideOverview />
+                </details>
 
-              <details className="project-view-details-collapsible">
-                <summary>Staging &amp; production details</summary>
-                <ProjectEnvironmentDetails
-                  project={selectedProject}
-                  onSaved={handleProjectSaved}
-                />
-              </details>
+                <details className="project-view-details-collapsible">
+                  <summary>Staging &amp; production</summary>
+                  <ProjectEnvironmentDetails
+                    project={selectedProject}
+                    onSaved={handleProjectSaved}
+                    compact
+                  />
+                </details>
+              </aside>
 
               <section className="project-view-updates">
                 <div className="project-view-updates-toolbar">

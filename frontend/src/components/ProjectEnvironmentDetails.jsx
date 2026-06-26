@@ -9,104 +9,121 @@ const EMPTY_ENV = {
   ftpDetails: "",
 };
 
+const ENV_FIELDS = [
+  { key: "siteUrl", label: "URL", type: "url", full: true, placeholder: "https://" },
+  {
+    key: "domainDetails",
+    label: "Domain details",
+    type: "textarea",
+    placeholder: "Registrar, DNS records, nameservers...",
+  },
+  {
+    key: "hostingDetails",
+    label: "Hosting details",
+    type: "textarea",
+    placeholder: "Provider, plan, control panel login notes...",
+  },
+  {
+    key: "ftpDetails",
+    label: "FTP details",
+    type: "textarea",
+    full: true,
+    placeholder: "Host, username, port, path...",
+  },
+];
+
 function envFromProject(project, key) {
   return { ...EMPTY_ENV, ...(project?.[key] || {}) };
 }
 
-function EnvField({ label, value, multiline = false }) {
-  if (!value) {
-    return (
-      <div className="env-detail-row">
-        <span>{label}</span>
-        <strong className="muted">—</strong>
-      </div>
-    );
-  }
+function urlLabel(envKey) {
+  return envKey === "stagingDetails" ? "Staging URL" : "Production URL";
+}
 
-  if (label.toLowerCase().includes("url")) {
-    return (
-      <div className="env-detail-row">
-        <span>{label}</span>
-        <strong>
+function EnvFieldView({ label, value, multiline = false, isUrl = false }) {
+  return (
+    <div className={`env-field-view ${multiline ? "env-field-view--stacked" : ""}`}>
+      <span className="env-field-label">{label}</span>
+      <div className="env-field-value">
+        {!value ? (
+          <span className="muted">—</span>
+        ) : isUrl ? (
           <a href={value} target="_blank" rel="noreferrer">
             {value}
           </a>
-        </strong>
+        ) : (
+          <span className={multiline ? "pre-wrap" : ""}>{value}</span>
+        )}
       </div>
-    );
-  }
-
-  return (
-    <div className={`env-detail-row ${multiline ? "env-detail-row--full" : ""}`}>
-      <span>{label}</span>
-      <strong className={multiline ? "pre-wrap" : ""}>{value}</strong>
     </div>
   );
 }
 
-function EnvironmentPanel({ title, envKey, env, editing, onChange }) {
+function EnvFormFields({ envKey, env, onChange, compact = false }) {
+  const textareaRows = compact ? 2 : 3;
+
+  return (
+    <div className="env-form-grid">
+      {ENV_FIELDS.map((field) => {
+        const label = field.key === "siteUrl" ? urlLabel(envKey) : field.label;
+        const fieldClass = `env-field${field.full ? " env-field--full" : ""}`;
+
+        if (field.type === "url") {
+          return (
+            <label key={field.key} className={fieldClass}>
+              <span className="env-field-label">{label}</span>
+              <input
+                type="url"
+                className="env-field-input"
+                value={env[field.key]}
+                onChange={(e) => onChange({ ...env, [field.key]: e.target.value })}
+                placeholder={field.placeholder}
+              />
+            </label>
+          );
+        }
+
+        return (
+          <label key={field.key} className={fieldClass}>
+            <span className="env-field-label">{label}</span>
+            <textarea
+              className="env-field-textarea"
+              rows={textareaRows}
+              value={env[field.key]}
+              onChange={(e) => onChange({ ...env, [field.key]: e.target.value })}
+              placeholder={field.placeholder}
+            />
+          </label>
+        );
+      })}
+    </div>
+  );
+}
+
+function EnvironmentPanel({ title, envKey, env, editing, onChange, compact = false }) {
   if (editing) {
     return (
       <div className="env-panel">
-        <h4>{title}</h4>
-        <div className="env-form">
-          <label>
-            {envKey === "stagingDetails" ? "Staging URL" : "Production URL"}
-            <input
-              type="url"
-              value={env.siteUrl}
-              onChange={(e) => onChange({ ...env, siteUrl: e.target.value })}
-              placeholder="https://"
-            />
-          </label>
-          <label>
-            Domain details
-            <textarea
-              rows={3}
-              value={env.domainDetails}
-              onChange={(e) => onChange({ ...env, domainDetails: e.target.value })}
-              placeholder="Registrar, DNS records, nameservers..."
-            />
-          </label>
-          <label>
-            Hosting details
-            <textarea
-              rows={3}
-              value={env.hostingDetails}
-              onChange={(e) => onChange({ ...env, hostingDetails: e.target.value })}
-              placeholder="Provider, plan, control panel login notes..."
-            />
-          </label>
-          <label>
-            FTP details
-            <textarea
-              rows={3}
-              value={env.ftpDetails}
-              onChange={(e) => onChange({ ...env, ftpDetails: e.target.value })}
-              placeholder="Host, username, port, path..."
-            />
-          </label>
-        </div>
+        <h4 className="env-panel-title">{title}</h4>
+        <EnvFormFields envKey={envKey} env={env} onChange={onChange} compact={compact} />
       </div>
     );
   }
 
-  const urlLabel = envKey === "stagingDetails" ? "Staging URL" : "Production URL";
-
   return (
     <div className="env-panel">
-      <h4>{title}</h4>
-      <div className="env-detail-grid">
-        <EnvField label={urlLabel} value={env.siteUrl} />
-        <EnvField label="Domain details" value={env.domainDetails} multiline />
-        <EnvField label="Hosting details" value={env.hostingDetails} multiline />
-        <EnvField label="FTP details" value={env.ftpDetails} multiline />
+      <h4 className="env-panel-title">{title}</h4>
+      <div className="env-view-grid">
+        <EnvFieldView label={urlLabel(envKey)} value={env.siteUrl} isUrl />
+        <EnvFieldView label="Domain details" value={env.domainDetails} multiline />
+        <EnvFieldView label="Hosting details" value={env.hostingDetails} multiline />
+        <EnvFieldView label="FTP details" value={env.ftpDetails} multiline />
       </div>
     </div>
   );
 }
 
-export function ProjectEnvironmentDetails({ project, onSaved }) {
+export function ProjectEnvironmentDetails({ project, onSaved, compact = false }) {
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -145,11 +162,13 @@ export function ProjectEnvironmentDetails({ project, onSaved }) {
   }
 
   return (
-    <div className="project-env-details">
+    <div className={`project-env-details ${compact ? "project-env-details--compact" : ""}`}>
       <div className="project-env-toolbar">
-        <p className="muted project-env-hint">
-          Staging and production access details for this project.
-        </p>
+        {!compact && (
+          <p className="muted project-env-hint">
+            Staging and production access details for this project.
+          </p>
+        )}
         {!editing ? (
           <button type="button" className="btn-secondary btn-sm" onClick={() => setEditing(true)}>
             <Pencil size={14} /> Edit details
@@ -170,18 +189,20 @@ export function ProjectEnvironmentDetails({ project, onSaved }) {
 
       <div className="env-panels">
         <EnvironmentPanel
-          title="Staging details"
+          title="Staging"
           envKey="stagingDetails"
           env={staging}
           editing={editing}
           onChange={setStaging}
+          compact={compact}
         />
         <EnvironmentPanel
-          title="Production details"
+          title="Production"
           envKey="productionDetails"
           env={production}
           editing={editing}
           onChange={setProduction}
+          compact={compact}
         />
       </div>
     </div>
