@@ -1,6 +1,31 @@
+import { useNavigate } from "react-router-dom";
 import { Bell, Search } from "lucide-react";
+import { useChatNotifications } from "../context/ChatNotificationContext";
 
 export default function TopBar({ user, roleLabel, roleColor }) {
+  const navigate = useNavigate();
+  const {
+    totalUnread,
+    totalMentions,
+    notificationPermission,
+    browserNotificationsEnabled,
+    requestNotificationPermission,
+  } = useChatNotifications();
+
+  async function handleBellClick() {
+    if (notificationPermission === "default") {
+      await requestNotificationPermission();
+    }
+    navigate("/chat");
+  }
+
+  const showBadge = totalUnread > 0;
+  const bellLabel = showBadge
+    ? `${totalUnread} unread chat message${totalUnread === 1 ? "" : "s"}`
+    : browserNotificationsEnabled
+      ? "Team chat notifications enabled"
+      : "Team chat notifications";
+
   return (
     <header className="crm-topbar">
       <div className="topbar-search">
@@ -8,8 +33,19 @@ export default function TopBar({ user, roleLabel, roleColor }) {
         <input type="text" placeholder="Search employees, projects, clients..." />
       </div>
       <div className="topbar-actions">
-        <button type="button" className="icon-btn" aria-label="Notifications">
+        <button
+          type="button"
+          className={`icon-btn topbar-bell-btn ${showBadge ? "topbar-bell-btn--active" : ""}`}
+          aria-label={bellLabel}
+          title={bellLabel}
+          onClick={handleBellClick}
+        >
           <Bell size={18} />
+          {showBadge && (
+            <span className="topbar-bell-badge" aria-hidden="true">
+              {totalMentions > 0 ? "@" : totalUnread > 9 ? "9+" : totalUnread}
+            </span>
+          )}
         </button>
         <div className="topbar-user">
           <div>

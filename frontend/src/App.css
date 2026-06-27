@@ -1603,6 +1603,33 @@
   color: var(--text);
 }
 
+.topbar-bell-btn {
+  position: relative;
+}
+
+.topbar-bell-btn--active {
+  color: var(--brand);
+  border-color: #fecaca;
+  background: #fff5f2;
+}
+
+.topbar-bell-badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  border-radius: 999px;
+  background: var(--brand);
+  color: #fff;
+  font-size: 0.62rem;
+  font-weight: 700;
+  line-height: 16px;
+  text-align: center;
+  pointer-events: none;
+}
+
 /* ── Page Header ── */
 .page-header {
   display: flex;

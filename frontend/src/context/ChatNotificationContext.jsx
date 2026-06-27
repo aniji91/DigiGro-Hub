@@ -15,21 +15,34 @@ import {
 } from "../utils/chatSound";
 
 const ChatNotificationContext = createContext(null);
+const BROWSER_NOTIFY_KEY = "chat-browser-notifications";
 
-function requestBrowserPermission() {
-  if (typeof Notification === "undefined") return;
-  if (Notification.permission === "default") {
-    Notification.requestPermission();
-  }
+function isBrowserNotifyEnabled() {
+  return localStorage.getItem(BROWSER_NOTIFY_KEY) !== "false";
 }
 
-function showBrowserNotification(title, body, onClick) {
+function setBrowserNotifyEnabled(enabled) {
+  localStorage.setItem(BROWSER_NOTIFY_KEY, enabled ? "true" : "false");
+}
+
+async function requestBrowserPermission() {
+  if (typeof Notification === "undefined") return "unsupported";
+  if (Notification.permission === "granted") return "granted";
+  if (Notification.permission === "denied") return "denied";
+  return Notification.requestPermission();
+}
+
+function showBrowserNotification({ title, body, channelId, onClick }) {
   if (typeof Notification === "undefined" || Notification.permission !== "granted") return;
+  if (!isBrowserNotifyEnabled()) return;
+
   const notification = new Notification(title, {
     body,
     icon: "/favicon.ico",
-    tag: `workhub-chat-${Date.now()}`,
+    tag: channelId ? `workhub-chat-${channelId}` : `workhub-chat-${Date.now()}`,
+    renotify: true,
   });
+
   notification.onclick = () => {
     window.focus();
     onClick?.();
@@ -43,6 +56,10 @@ export function ChatNotificationProvider({ children }) {
   const [summary, setSummary] = useState({ totalUnread: 0, totalMentions: 0, channels: [], recent: [] });
   const [toasts, setToasts] = useState([]);
   const [soundEnabled, setSoundEnabled] = useState(isChatSoundEnabled);
+  const [browserNotificationsEnabled, setBrowserNotificationsEnabled] = useState(isBrowserNotifyEnabled);
+  const [notificationPermission, setNotificationPermission] = useState(
+    () => (typeof Notification !== "undefined" ? Notification.permission : "unsupported")
+  );
   const seenMessageIdsRef = useRef(new Set());
   const initializedRef = useRef(false);
   const activeChannelIdRef = useRef(null);
@@ -69,6 +86,29 @@ export function ChatNotificationProvider({ children }) {
       return next;
     });
   }, []);
+
+  const requestNotificationPermission = useCallback(async () => {
+    const result = await requestBrowserPermission();
+    setNotificationPermission(result);
+    if (result === "granted") {
+      setBrowserNotifyEnabled(true);
+      setBrowserNotificationsEnabled(true);
+    }
+    return result;
+  }, []);
+
+  const toggleBrowserNotifications = useCallback(async () => {
+    if (!browserNotificationsEnabled) {
+      const result = await requestNotificationPermission();
+      if (result !== "granted") return result;
+      setBrowserNotificationsEnabled(true);
+      return result;
+    }
+
+    setBrowserNotifyEnabled(false);
+    setBrowserNotificationsEnabled(false);
+    return Notification?.permission || "granted";
+  }, [browserNotificationsEnabled, requestNotificationPermission]);
 
   const refresh = useCallback(async () => {
     if (!chatEnabled) return;
@@ -121,11 +161,14 @@ export function ChatNotificationProvider({ children }) {
           : `New message in ${first.channelName}`;
         const body = `${first.userName}: ${first.text.slice(0, 120)}`;
 
-        if (document.hidden) {
-          showBrowserNotification(title, body, () => {
+        showBrowserNotification({
+          title,
+          body,
+          channelId: first.channelId,
+          onClick: () => {
             window.location.href = `/chat?channel=${first.channelId}`;
-          });
-        }
+          },
+        });
       }
     } catch {
       // ignore polling errors
@@ -143,12 +186,17 @@ export function ChatNotificationProvider({ children }) {
 
   useEffect(() => {
     if (!chatEnabled) return undefined;
-    requestBrowserPermission();
+
+    const unlock = () => {
+      unlockChatSound();
+      if (typeof Notification !== "undefined" && Notification.permission === "default") {
+        requestNotificationPermission();
+      }
+    };
+    window.addEventListener("pointerdown", unlock, { once: true });
+
     refresh();
     sendPresenceHeartbeat().catch(() => {});
-
-    const unlock = () => unlockChatSound();
-    window.addEventListener("pointerdown", unlock, { once: true });
 
     const poll = setInterval(refresh, 4000);
     const heartbeat = setInterval(() => sendPresenceHeartbeat().catch(() => {}), 30000);
@@ -157,7 +205,7 @@ export function ChatNotificationProvider({ children }) {
       clearInterval(poll);
       clearInterval(heartbeat);
     };
-  }, [chatEnabled, refresh]);
+  }, [chatEnabled, refresh, requestNotificationPermission]);
 
   const value = {
     totalUnread: summary.totalUnread,
@@ -171,6 +219,10 @@ export function ChatNotificationProvider({ children }) {
     setActiveChannelId,
     soundEnabled,
     toggleSound,
+    browserNotificationsEnabled,
+    notificationPermission,
+    requestNotificationPermission,
+    toggleBrowserNotifications,
   };
 
   return <ChatNotificationContext.Provider value={value}>{children}</ChatNotificationContext.Provider>;
@@ -191,6 +243,10 @@ export function useChatNotifications() {
       setActiveChannelId: () => {},
       soundEnabled: true,
       toggleSound: () => {},
+      browserNotificationsEnabled: false,
+      notificationPermission: "unsupported",
+      requestNotificationPermission: async () => "unsupported",
+      toggleBrowserNotifications: async () => "unsupported",
     };
   }
   return context;
