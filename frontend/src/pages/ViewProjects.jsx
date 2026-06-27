@@ -7,6 +7,7 @@ import { fetchEmployees } from "../api/employeeApi";
 import { PROJECT_TYPE_LABELS } from "../config/projectConfig";
 import { ProjectBriefDetails } from "../components/ProjectBriefDetails";
 import { ProjectEnvironmentDetails } from "../components/ProjectEnvironmentDetails";
+import { ProjectExternalCrmDetails } from "../components/ProjectExternalCrmDetails";
 
 const today = () => new Date().toISOString().slice(0, 10);
 
@@ -383,6 +384,15 @@ export default function ViewProjects() {
                 <details className="project-view-details-collapsible">
                   <summary>Staging &amp; production</summary>
                   <ProjectEnvironmentDetails
+                    project={selectedProject}
+                    onSaved={handleProjectSaved}
+                    compact
+                  />
+                </details>
+
+                <details className="project-view-details-collapsible">
+                  <summary>External CRMs</summary>
+                  <ProjectExternalCrmDetails
                     project={selectedProject}
                     onSaved={handleProjectSaved}
                     compact

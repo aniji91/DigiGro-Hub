@@ -14,6 +14,7 @@ import DataTable from "../components/DataTable";
 import Modal from "../components/Modal";
 import PageHeader from "../components/PageHeader";
 import { ProjectBriefDetails } from "../components/ProjectBriefDetails";
+import { ExternalCrmIntegrationsEditor } from "../components/ExternalCrmIntegrationsEditor";
 
 const MAX_DOC_SIZE = 5 * 1024 * 1024;
 
@@ -123,6 +124,7 @@ export default function Projects() {
       pageScope: row.pageScope || "",
       techPreferences: row.techPreferences || "",
       documents: row.documents || [],
+      externalCrmIntegrations: row.externalCrmIntegrations || [],
     };
   }
 
@@ -483,6 +485,18 @@ export default function Projects() {
                     placeholder="Design preferences, features, content notes, deadlines..."
                   />
                 </label>
+              </div>
+
+              <div className="employee-form-section">
+                <h4>External CRM integrations</h4>
+                <p className="field-hint">
+                  Save LeadSquared, Salesforce, Google Sheets, HubSpot, Zoho, or other CRM connection details.
+                </p>
+                <ExternalCrmIntegrationsEditor
+                  integrations={form.externalCrmIntegrations || []}
+                  editing
+                  onChange={(next) => setForm({ ...form, externalCrmIntegrations: next })}
+                />
               </div>
 
               <div className="employee-form-section">

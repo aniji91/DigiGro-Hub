@@ -37,6 +37,41 @@ function normalizeEnvironmentDetails(body, existing = {}) {
   };
 }
 
+function normalizeExternalCrmIntegrations(integrations) {
+  if (!Array.isArray(integrations)) return [];
+
+  return integrations
+    .map((item, index) => {
+      const source = item && typeof item === "object" ? item : {};
+      const provider = (source.provider || "other").trim() || "other";
+      return {
+        id: (source.id || `crm-${index + 1}`).trim(),
+        provider,
+        label: (source.label || "").trim(),
+        apiUrl: (source.apiUrl || "").trim(),
+        apiKey: (source.apiKey || "").trim(),
+        accessKey: (source.accessKey || "").trim(),
+        secretKey: (source.secretKey || "").trim(),
+        clientId: (source.clientId || "").trim(),
+        clientSecret: (source.clientSecret || "").trim(),
+        accessToken: (source.accessToken || "").trim(),
+        refreshToken: (source.refreshToken || "").trim(),
+        webhookUrl: (source.webhookUrl || "").trim(),
+        spreadsheetUrl: (source.spreadsheetUrl || "").trim(),
+        spreadsheetId: (source.spreadsheetId || "").trim(),
+        instanceUrl: (source.instanceUrl || "").trim(),
+        username: (source.username || "").trim(),
+        securityToken: (source.securityToken || "").trim(),
+        portalId: (source.portalId || "").trim(),
+        notes: (source.notes || "").trim(),
+      };
+    })
+    .filter((item) => {
+      const { id, provider, ...fields } = item;
+      return Object.values(fields).some(Boolean);
+    });
+}
+
 function normalizeProject(body, existing = {}) {
   const assignedEmployeeIds =
     body.assignedEmployeeIds !== undefined
@@ -83,6 +118,10 @@ function normalizeProject(body, existing = {}) {
       body.productionDetails !== undefined
         ? normalizeEnvironmentDetails(body.productionDetails, existing.productionDetails)
         : existing.productionDetails || normalizeEnvironmentDetails(),
+    externalCrmIntegrations:
+      body.externalCrmIntegrations !== undefined
+        ? normalizeExternalCrmIntegrations(body.externalCrmIntegrations)
+        : existing.externalCrmIntegrations || [],
   };
 }
 
@@ -91,4 +130,5 @@ module.exports = {
   normalizeReferenceSites,
   normalizeDocuments,
   normalizeEnvironmentDetails,
+  normalizeExternalCrmIntegrations,
 };

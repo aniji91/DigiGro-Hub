@@ -343,6 +343,85 @@
   font-size: 0.72rem;
 }
 
+.project-crm-details {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.project-crm-details--compact .project-env-toolbar {
+  justify-content: flex-end;
+  margin-bottom: -0.25rem;
+}
+
+.crm-integrations-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.crm-integration-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.crm-integration-card {
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 0.7rem 0.8rem;
+}
+
+.crm-integration-card--view {
+  padding: 0.65rem 0.75rem;
+}
+
+.crm-integration-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 0.65rem;
+  margin-bottom: 0.55rem;
+}
+
+.crm-provider-select {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  min-width: 0;
+}
+
+.crm-provider-select select {
+  width: 100%;
+  padding: 0.45rem 0.6rem;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 0.84rem;
+  background: #fff;
+}
+
+.crm-remove-btn {
+  flex-shrink: 0;
+  margin-bottom: 0.15rem;
+}
+
+.crm-integration-title {
+  margin: 0 0 0.5rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #374151;
+}
+
+.crm-add-btn {
+  align-self: flex-start;
+}
+
+.crm-integrations-empty {
+  font-size: 0.82rem;
+}
+
 .project-env-details--compact .env-view-grid {
   display: flex;
   flex-direction: column;

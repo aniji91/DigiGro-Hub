@@ -88,6 +88,15 @@ export async function updateProjectEnvironment(projectId, body) {
   return handleResponse(response);
 }
 
+export async function updateProjectExternalCrms(projectId, externalCrmIntegrations) {
+  const response = await fetch(`${API_BASE}/projects/${projectId}/external-crms`, {
+    method: "PATCH",
+    headers: getAuthHeaders(),
+    body: JSON.stringify({ externalCrmIntegrations }),
+  });
+  return handleResponse(response);
+}
+
 export async function fetchMyOnboarding() {
   const response = await fetch(`${API_BASE}/project-onboarding`, {
     headers: getAuthHeaders(),
