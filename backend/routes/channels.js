@@ -14,6 +14,10 @@ const PRESENCE_FILE = dataPath("user_presence.json");
 
 const ONLINE_WINDOW_MS = 2 * 60 * 1000;
 
+function sameChannelId(a, b) {
+  return Number(a) === Number(b);
+}
+
 function readChannels() {
   return readData(CHANNELS_FILE);
 }
@@ -100,12 +104,12 @@ function resolveProjectMembers(projectId) {
 }
 
 function getLastRead(userId, channelId) {
-  return readReads().find((r) => r.userId === userId && r.channelId === channelId);
+  return readReads().find((r) => r.userId === userId && sameChannelId(r.channelId, channelId));
 }
 
 function markChannelRead(userId, channelId, messageId) {
   const reads = readReads();
-  const index = reads.findIndex((r) => r.userId === userId && r.channelId === channelId);
+  const index = reads.findIndex((r) => r.userId === userId && sameChannelId(r.channelId, channelId));
   const entry = {
     userId,
     channelId: Number(channelId),
@@ -121,7 +125,7 @@ function markChannelRead(userId, channelId, messageId) {
 function buildReplySnapshot(messages, channelId, replyToMessageId) {
   if (!replyToMessageId) return null;
   const original = messages.find((m) => m.id === Number(replyToMessageId));
-  if (!original || original.channelId !== Number(channelId)) return null;
+  if (!original || !sameChannelId(original.channelId, channelId)) return null;
 
   let previewText = (original.text || "").trim();
   if (!previewText) {
@@ -148,7 +152,7 @@ function getUnreadMessagesForUser(user, channel, allMessages) {
 
   return allMessages.filter(
     (m) =>
-      m.channelId === channel.id &&
+      sameChannelId(m.channelId, channel.id) &&
       m.userId !== user.id &&
       new Date(m.createdAt) > cutoff
   );
@@ -184,7 +188,7 @@ function findDirectChannel(channels, userIdA, userIdB) {
 
 function enrichChannel(channel, user, allMessages) {
   const channelMessages = allMessages
-    .filter((m) => m.channelId === channel.id)
+    .filter((m) => sameChannelId(m.channelId, channel.id))
     .sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
 
   const unread = getUnreadMessagesForUser(user, channel, allMessages);
@@ -544,7 +548,7 @@ router.get("/:id/messages", (req, res) => {
   }
 
   const messages = readMessages()
-    .filter((m) => m.channelId === channel.id)
+    .filter((m) => sameChannelId(m.channelId, channel.id))
     .sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
 
   res.json(messages);
@@ -594,7 +598,7 @@ router.post("/:id/messages", (req, res) => {
   const messages = readMessages();
   const newMessage = {
     id: nextId(messages),
-    channelId: channel.id,
+    channelId: Number(channel.id),
     userId: req.user.id,
     userName: req.user.name,
     userRole: req.user.role,
@@ -645,10 +649,10 @@ router.delete("/:id", (req, res) => {
   const deleted = channels.splice(index, 1)[0];
   writeChannels(channels);
 
-  const messages = readMessages().filter((m) => m.channelId !== deleted.id);
+  const messages = readMessages().filter((m) => !sameChannelId(m.channelId, deleted.id));
   writeMessages(messages);
 
-  const reads = readReads().filter((r) => r.channelId !== deleted.id);
+  const reads = readReads().filter((r) => !sameChannelId(r.channelId, deleted.id));
   writeReads(reads);
 
   res.json(deleted);

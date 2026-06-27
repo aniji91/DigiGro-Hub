@@ -335,34 +335,40 @@ export default function TeamChat() {
 
   async function loadMessages(channelId, markAsRead = true) {
     if (!channelId) return;
-    const data = await fetchMessages(channelId);
+    try {
+      setError("");
+      const data = await fetchMessages(channelId);
 
-    if (!channelMessagesInitRef.current) {
-      data.forEach((m) => seenChannelMessageIdsRef.current.add(m.id));
-      channelMessagesInitRef.current = true;
-    } else {
-      const newcomers = data.filter(
-        (m) => !seenChannelMessageIdsRef.current.has(m.id) && m.userName !== user?.name
-      );
-      newcomers.forEach((m) => seenChannelMessageIdsRef.current.add(m.id));
-      if (newcomers.length > 0) {
-        const mentioned = newcomers.some(
-          (m) =>
-            m.mentionAll ||
-            (Array.isArray(m.mentionUserIds) && m.mentionUserIds.includes(user?.id))
+      if (!channelMessagesInitRef.current) {
+        data.forEach((m) => seenChannelMessageIdsRef.current.add(m.id));
+        channelMessagesInitRef.current = true;
+      } else {
+        const newcomers = data.filter(
+          (m) => !seenChannelMessageIdsRef.current.has(m.id) && m.userName !== user?.name
         );
-        playChatSound({ mention: mentioned });
+        newcomers.forEach((m) => seenChannelMessageIdsRef.current.add(m.id));
+        if (newcomers.length > 0) {
+          const mentioned = newcomers.some(
+            (m) =>
+              m.mentionAll ||
+              (Array.isArray(m.mentionUserIds) && m.mentionUserIds.includes(user?.id))
+          );
+          playChatSound({ mention: mentioned });
+        }
       }
-    }
 
-    setMessages(data);
-    if (markAsRead && data.length > 0) {
-      const last = data[data.length - 1];
-      await markRead(channelId, last.id);
-      await refresh();
-      setChannels((prev) =>
-        prev.map((c) => (c.id === channelId ? { ...c, unreadCount: 0, mentionUnread: 0 } : c))
-      );
+      setMessages(data);
+
+      if (markAsRead && data.length > 0) {
+        const last = data[data.length - 1];
+        await markRead(channelId, last.id);
+        await refresh();
+        setChannels((prev) =>
+          prev.map((c) => (c.id === channelId ? { ...c, unreadCount: 0, mentionUnread: 0 } : c))
+        );
+      }
+    } catch (err) {
+      setError(err.message || "Failed to load messages");
     }
   }
 
@@ -618,9 +624,11 @@ export default function TeamChat() {
 
   async function postMessage(payload) {
     const msg = await sendMessage(activeId, payload);
+    seenChannelMessageIdsRef.current.add(msg.id);
     setMessages((prev) => [...prev, msg]);
     await markRead(activeId, msg.id);
     await refresh();
+    await loadMessages(activeId, false);
     return msg;
   }
 
@@ -956,7 +964,7 @@ export default function TeamChat() {
                         className="flock-message-avatar"
                         style={{ background: ROLE_COLORS[msg.userRole] || "#6366f1" }}
                       >
-                        {msg.userName.charAt(0)}
+                        {msg.userName?.charAt(0) || "?"}
                       </div>
                       <div className="flock-message-content">
                         <div className="flock-message-actions">
@@ -970,7 +978,7 @@ export default function TeamChat() {
                           </button>
                         </div>
                         <div className="flock-message-top">
-                          <strong>{msg.userName}</strong>
+                          <strong>{msg.userName || "Unknown"}</strong>
                           {isMentioned && <span className="mention-badge">mentioned you</span>}
                           <span className="flock-message-time">{formatMessageTime(msg.createdAt)}</span>
                         </div>
