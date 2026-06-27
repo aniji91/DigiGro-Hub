@@ -16,6 +16,7 @@ import {
 
 const ChatNotificationContext = createContext(null);
 const BROWSER_NOTIFY_KEY = "chat-browser-notifications";
+const APP_TITLE = "DigiGro Hub";
 
 function isBrowserNotifyEnabled() {
   return localStorage.getItem(BROWSER_NOTIFY_KEY) !== "false";
@@ -206,6 +207,19 @@ export function ChatNotificationProvider({ children }) {
       clearInterval(heartbeat);
     };
   }, [chatEnabled, refresh, requestNotificationPermission]);
+
+  useEffect(() => {
+    if (chatEnabled && summary.totalUnread > 0) {
+      const count = summary.totalUnread > 99 ? "99+" : summary.totalUnread;
+      document.title = `(${count}) ${APP_TITLE}`;
+    } else {
+      document.title = APP_TITLE;
+    }
+
+    return () => {
+      document.title = APP_TITLE;
+    };
+  }, [chatEnabled, summary.totalUnread]);
 
   const value = {
     totalUnread: summary.totalUnread,
