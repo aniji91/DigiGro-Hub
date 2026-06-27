@@ -67,6 +67,7 @@ export function ChatNotificationProvider({ children }) {
 
   const chatEnabled = user && canView(user.role, "chat");
   const onChatPage = location.pathname.startsWith("/chat");
+  const totalUnread = summary.totalUnread || 0;
 
   const setActiveChannelId = useCallback((channelId) => {
     activeChannelIdRef.current = channelId;
@@ -136,7 +137,7 @@ export function ChatNotificationProvider({ children }) {
 
         seenMessageIdsRef.current.add(msg.id);
         const isActiveChannel =
-          onChatPage && activeChannelIdRef.current === item.channelId;
+          onChatPage && Number(activeChannelIdRef.current) === Number(item.channelId);
 
         if (!isActiveChannel) {
           newAlerts.push({
@@ -209,20 +210,25 @@ export function ChatNotificationProvider({ children }) {
   }, [chatEnabled, refresh, requestNotificationPermission]);
 
   useEffect(() => {
-    if (chatEnabled && summary.totalUnread > 0) {
-      const count = summary.totalUnread > 99 ? "99+" : summary.totalUnread;
-      document.title = `(${count}) ${APP_TITLE}`;
-    } else {
+    if (!chatEnabled) {
       document.title = APP_TITLE;
+      return undefined;
     }
 
-    return () => {
-      document.title = APP_TITLE;
-    };
-  }, [chatEnabled, summary.totalUnread]);
+    document.title =
+      totalUnread > 0
+        ? `(${totalUnread > 99 ? "99+" : totalUnread}) ${APP_TITLE}`
+        : APP_TITLE;
+
+    return undefined;
+  }, [chatEnabled, totalUnread]);
+
+  useEffect(() => () => {
+    document.title = APP_TITLE;
+  }, []);
 
   const value = {
-    totalUnread: summary.totalUnread,
+    totalUnread,
     totalMentions: summary.totalMentions,
     channels: summary.channels,
     recent: summary.recent,

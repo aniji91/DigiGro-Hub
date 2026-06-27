@@ -1468,6 +1468,14 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
+}
+
+.nav-item.active .nav-badge,
+.nav-badge--active-route {
+  background: #fff;
+  color: var(--brand);
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.35);
 }
 
 .sidebar-footer {

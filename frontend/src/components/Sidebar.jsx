@@ -1,10 +1,11 @@
-import { NavLink } from "react-router-dom";
+import { NavLink, useLocation } from "react-router-dom";
 import { LogOut, PanelLeftClose, PanelLeft } from "lucide-react";
 import { useChatNotifications } from "../context/ChatNotificationContext";
 import AppLogo from "./AppLogo";
 
 export default function Sidebar({ menuItems, user, roleLabel, roleColor, onLogout, collapsed, onToggle }) {
   const { totalUnread } = useChatNotifications();
+  const location = useLocation();
 
   return (
     <aside className={`crm-sidebar ${collapsed ? "crm-sidebar--collapsed" : ""}`}>
@@ -25,16 +26,21 @@ export default function Sidebar({ menuItems, user, roleLabel, roleColor, onLogou
         {menuItems.map((item) => {
           const Icon = item.icon;
           const badge = item.key === "chat" && totalUnread > 0 ? totalUnread : null;
+          const isChatRoute = item.path === "/chat" && location.pathname.startsWith("/chat");
           return (
             <NavLink
               key={item.key}
               to={item.path}
-              className={({ isActive }) => `nav-item ${isActive ? "active" : ""}`}
+              className={({ isActive: navActive }) => `nav-item ${navActive ? "active" : ""}`}
               title={collapsed ? item.label : undefined}
             >
               <Icon size={18} />
               <span className="nav-item-label">{item.label}</span>
-              {badge && <span className="nav-badge">{badge > 99 ? "99+" : badge}</span>}
+              {badge && (
+                <span className={`nav-badge ${isChatRoute ? "nav-badge--active-route" : ""}`}>
+                  {badge > 99 ? "99+" : badge}
+                </span>
+              )}
             </NavLink>
           );
         })}

@@ -18,6 +18,11 @@ function sameChannelId(a, b) {
   return Number(a) === Number(b);
 }
 
+function sameUserId(a, b) {
+  if (a == null || b == null) return false;
+  return Number(a) === Number(b);
+}
+
 function readChannels() {
   return readData(CHANNELS_FILE);
 }
@@ -65,16 +70,19 @@ function writePresence(presence) {
 function userCanAccessChannel(user, channel) {
   if (channel.type === "direct") {
     const ids = channel.dmUserIds || channel.memberUserIds || [];
-    return ids.includes(user.id);
+    return ids.some((id) => sameUserId(id, user.id));
   }
   if (user.role === "superadmin") return true;
   if (channel.isAllEmployees) return true;
-  if (channel.memberUserIds.includes(user.id)) return true;
+  if ((channel.memberUserIds || []).some((id) => sameUserId(id, user.id))) return true;
 
   if (channel.type === "project" && channel.projectId && user.employeeId) {
     const projects = readProjects();
-    const project = projects.find((p) => p.id === channel.projectId);
-    if (project && (project.assignedEmployeeIds || []).includes(user.employeeId)) {
+    const project = projects.find((p) => p.id === Number(channel.projectId));
+    if (
+      project &&
+      (project.assignedEmployeeIds || []).some((id) => Number(id) === Number(user.employeeId))
+    ) {
       return true;
     }
   }
@@ -104,14 +112,18 @@ function resolveProjectMembers(projectId) {
 }
 
 function getLastRead(userId, channelId) {
-  return readReads().find((r) => r.userId === userId && sameChannelId(r.channelId, channelId));
+  return readReads().find(
+    (r) => sameUserId(r.userId, userId) && sameChannelId(r.channelId, channelId)
+  );
 }
 
 function markChannelRead(userId, channelId, messageId) {
   const reads = readReads();
-  const index = reads.findIndex((r) => r.userId === userId && sameChannelId(r.channelId, channelId));
+  const index = reads.findIndex(
+    (r) => sameUserId(r.userId, userId) && sameChannelId(r.channelId, channelId)
+  );
   const entry = {
-    userId,
+    userId: Number(userId),
     channelId: Number(channelId),
     lastReadAt: new Date().toISOString(),
     lastReadMessageId: messageId ? Number(messageId) : null,
@@ -153,19 +165,19 @@ function getUnreadMessagesForUser(user, channel, allMessages) {
   return allMessages.filter(
     (m) =>
       sameChannelId(m.channelId, channel.id) &&
-      m.userId !== user.id &&
+      !sameUserId(m.userId, user.id) &&
       new Date(m.createdAt) > cutoff
   );
 }
 
 function isMessageMentioningUser(message, userId) {
   if (message.mentionAll) return true;
-  return (message.mentionUserIds || []).includes(userId);
+  return (message.mentionUserIds || []).some((id) => sameUserId(id, userId));
 }
 
 function getDirectPeerId(channel, userId) {
   const ids = channel.dmUserIds || channel.memberUserIds || [];
-  return ids.find((id) => id !== userId) || null;
+  return ids.find((id) => !sameUserId(id, userId)) || null;
 }
 
 function getDirectDisplayName(channel, userId) {

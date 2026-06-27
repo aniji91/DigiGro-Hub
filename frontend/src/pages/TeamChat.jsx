@@ -229,7 +229,7 @@ function getMentionSuggestions(members, query, currentUserId) {
 
 export default function TeamChat() {
   const { user, permissions, roleLabel } = useAuth();
-  const { refresh, markRead, setActiveChannelId, totalUnread, totalMentions, soundEnabled, toggleSound } =
+  const { refresh, markRead, setActiveChannelId, totalUnread, totalMentions, soundEnabled, toggleSound, channels: notifyChannels } =
     useChatNotifications();
   const [searchParams, setSearchParams] = useSearchParams();
   const perms = permissions.chat || {};
@@ -266,6 +266,7 @@ export default function TeamChat() {
   const composeRef = useRef(null);
   const channelMessagesInitRef = useRef(false);
   const seenChannelMessageIdsRef = useRef(new Set());
+  const activeChannelIdRef = useRef(null);
   const activeChannel = channels.find((c) => c.id === activeId);
 
   const searchLower = search.trim().toLowerCase();
@@ -338,6 +339,7 @@ export default function TeamChat() {
     try {
       setError("");
       const data = await fetchMessages(channelId);
+      if (Number(activeChannelIdRef.current) !== Number(channelId)) return;
 
       if (!channelMessagesInitRef.current) {
         data.forEach((m) => seenChannelMessageIdsRef.current.add(m.id));
@@ -416,6 +418,7 @@ export default function TeamChat() {
   }, [activeId, activeChannel?.id, activeChannel?.channelMembers?.length]);
 
   useEffect(() => {
+    activeChannelIdRef.current = activeId;
     setActiveChannelId(activeId);
     channelMessagesInitRef.current = false;
     seenChannelMessageIdsRef.current = new Set();
@@ -425,6 +428,22 @@ export default function TeamChat() {
     const interval = setInterval(() => loadMessages(activeId), 4000);
     return () => clearInterval(interval);
   }, [activeId]);
+
+  useEffect(() => {
+    if (!notifyChannels?.length || channels.length === 0) return;
+    setChannels((prev) =>
+      prev.map((channel) => {
+        const latest = notifyChannels.find((item) => item.id === channel.id);
+        if (!latest) return channel;
+        return {
+          ...channel,
+          unreadCount: latest.unreadCount,
+          mentionUnread: latest.mentionUnread,
+          lastMessage: latest.lastMessage ?? channel.lastMessage,
+        };
+      })
+    );
+  }, [notifyChannels]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
