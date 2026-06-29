@@ -4804,16 +4804,17 @@
 }
 
 .pm-board-wrap {
-  overflow-x: auto;
   border: 1px solid var(--border);
   border-radius: 12px;
   background: #fff;
+  overflow-x: auto;
 }
 
 .pm-board-table {
   width: 100%;
   border-collapse: collapse;
   font-size: 0.85rem;
+  table-layout: fixed;
 }
 
 .pm-board-table th,
@@ -4835,20 +4836,72 @@
 }
 
 .pm-col-project {
-  min-width: 180px;
+  width: 14%;
+  min-width: 140px;
 }
 
 .pm-col-owner {
-  min-width: 160px;
+  width: 12%;
+  min-width: 130px;
 }
 
 .pm-col-team {
-  min-width: 200px;
-  max-width: 260px;
+  width: 16%;
+  min-width: 150px;
 }
 
 .pm-team-empty {
   font-size: 0.8rem;
+}
+
+.pm-team-chips {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.pm-team-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  max-width: 100%;
+  padding: 0.2rem 0.45rem 0.2rem 0.2rem;
+  border-radius: 999px;
+  background: #f9fafb;
+  border: 1px solid #eef0f3;
+  cursor: default;
+}
+
+.pm-team-chip--active {
+  border-color: var(--brand);
+  background: #fff5f2;
+}
+
+.pm-team-chip-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  min-width: 0;
+  line-height: 1.2;
+}
+
+.pm-team-chip-text strong {
+  font-size: 0.72rem;
+  color: #111827;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 110px;
+}
+
+.pm-team-chip-text span {
+  font-size: 0.65rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 110px;
 }
 
 .pm-team-list {
@@ -4874,12 +4927,12 @@
 }
 
 .pm-team-avatar {
-  width: 28px;
-  height: 28px;
+  width: 22px;
+  height: 22px;
   border-radius: 50%;
   background: #fff5f2;
   color: var(--brand);
-  font-size: 0.68rem;
+  font-size: 0.6rem;
   font-weight: 700;
   display: inline-flex;
   align-items: center;
@@ -4937,16 +4990,18 @@
 }
 
 .pm-col-status {
-  min-width: 110px;
+  width: 9%;
+  min-width: 100px;
 }
 
 .pm-col-day {
-  min-width: 150px;
-  max-width: 200px;
+  width: 11%;
+  min-width: 110px;
 }
 
 .pm-col-actions {
-  min-width: 200px;
+  width: 11%;
+  min-width: 130px;
 }
 
 .pm-board-client {
@@ -4998,12 +5053,14 @@
 }
 
 .pm-task-form {
-  margin: 0.75rem 1rem 1rem;
   background: #fff;
   border: 1px solid #e5e7eb;
   border-radius: 12px;
   box-shadow: 0 4px 16px rgba(15, 23, 42, 0.06);
-  overflow: hidden;
+}
+
+.pm-task-form--panel {
+  margin-bottom: 1rem;
 }
 
 .pm-task-form-header {
@@ -5041,10 +5098,37 @@
 }
 
 .pm-task-form-body {
-  padding: 1rem;
+  padding: 1rem 1.25rem;
+}
+
+.pm-task-form-fields {
+  display: grid;
+  grid-template-columns: 180px 180px minmax(0, 1fr);
+  gap: 1rem;
+  align-items: start;
+}
+
+.pm-task-form-fields label {
   display: flex;
   flex-direction: column;
-  gap: 0.85rem;
+  gap: 0.35rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #374151;
+}
+
+.pm-task-form-fields input,
+.pm-task-form-fields select,
+.pm-task-form-fields textarea {
+  font-weight: 400;
+  width: 100%;
+}
+
+.pm-task-form-description textarea {
+  min-height: 88px;
+  max-height: 120px;
+  resize: none;
+  line-height: 1.45;
 }
 
 .pm-task-form-row {
@@ -5079,10 +5163,19 @@
 .pm-task-form-footer {
   display: flex;
   justify-content: flex-end;
-  gap: 0.5rem;
-  padding: 0.75rem 1rem;
+  align-items: center;
+  gap: 0.65rem;
+  width: 100%;
+  padding: 0.85rem 1.25rem;
   border-top: 1px solid #eef0f3;
   background: #fafafa;
+  border-radius: 0 0 12px 12px;
+}
+
+.pm-row-actions .btn-secondary.active {
+  border-color: var(--brand);
+  background: #fff5f2;
+  color: var(--brand);
 }
 
 .pm-inline-form {
@@ -5151,6 +5244,10 @@
 }
 
 @media (max-width: 900px) {
+  .pm-task-form-fields {
+    grid-template-columns: 1fr;
+  }
+
   .pm-task-form-row {
     grid-template-columns: 1fr;
   }

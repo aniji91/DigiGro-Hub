@@ -109,6 +109,11 @@ export default function PmProjectBoard() {
     });
   }, [projects, ownerFilter, teamFilter]);
 
+  const addingProject = useMemo(
+    () => projects.find((p) => p.id === addingForProject) || null,
+    [projects, addingForProject]
+  );
+
   const updatesByProject = useMemo(() => {
     const map = new Map();
     updates.forEach((u) => {
@@ -277,6 +282,78 @@ export default function PmProjectBoard() {
 
       {error && <div className="alert error">{error}</div>}
 
+      {addingProject && (
+        <form
+          className="pm-task-form pm-task-form--panel"
+          onSubmit={(e) => handleAddTask(e, addingProject)}
+        >
+          <div className="pm-task-form-header">
+            <div className="pm-task-form-title">
+              <ListTodo size={18} />
+              <div>
+                <strong>Add daily task</strong>
+                <span>{addingProject.name} · {addingProject.clientName}</span>
+              </div>
+            </div>
+            <button
+              type="button"
+              className="icon-action"
+              onClick={closeAddTask}
+              title="Close"
+            >
+              <X size={18} />
+            </button>
+          </div>
+
+          <div className="pm-task-form-body">
+            <div className="pm-task-form-fields">
+              <label>
+                Date
+                <input
+                  type="date"
+                  value={getTaskForm(addingProject.id).date}
+                  onChange={(e) => setTaskForm(addingProject.id, { date: e.target.value })}
+                  required
+                />
+              </label>
+              <label>
+                Task status
+                <select
+                  value={getTaskForm(addingProject.id).taskStatus}
+                  onChange={(e) => setTaskForm(addingProject.id, { taskStatus: e.target.value })}
+                  required
+                >
+                  {TASK_STATUS_OPTIONS.map((opt) => (
+                    <option key={opt} value={opt}>{opt}</option>
+                  ))}
+                </select>
+              </label>
+              <label className="pm-task-form-description">
+                Task / work description
+                <textarea
+                  rows={3}
+                  value={getTaskForm(addingProject.id).content}
+                  onChange={(e) => setTaskForm(addingProject.id, { content: e.target.value })}
+                  placeholder="What was done today, blockers, next steps..."
+                  required
+                  autoFocus
+                />
+              </label>
+            </div>
+          </div>
+
+          <div className="pm-task-form-footer">
+            <button type="button" className="btn-secondary" onClick={closeAddTask}>
+              Cancel
+            </button>
+            <button type="submit" className="btn-primary" disabled={saving}>
+              <Plus size={16} />
+              {saving ? "Saving..." : "Save task"}
+            </button>
+          </div>
+        </form>
+      )}
+
       {filteredProjects.length === 0 ? (
         <div className="empty-state">No projects match this filter.</div>
       ) : (
@@ -297,13 +374,12 @@ export default function PmProjectBoard() {
             <tbody>
               {filteredProjects.map((project) => {
                 const isExpanded = expandedProjectId === project.id;
-                const isAdding = addingForProject === project.id;
                 const allStatus = getAllStatusUpdates(project.id);
                 const team = getProjectTeam(project, employeeById);
 
                 return (
                   <Fragment key={project.id}>
-                    <tr className={isExpanded || isAdding ? "pm-row-active" : ""}>
+                    <tr className={isExpanded ? "pm-row-active" : ""}>
                       <td className="pm-col-project">
                         <strong>{project.name}</strong>
                         <span className="pm-board-client">{project.clientName}</span>
@@ -330,20 +406,18 @@ export default function PmProjectBoard() {
                         {team.length === 0 ? (
                           <span className="muted pm-team-empty">No team assigned</span>
                         ) : (
-                          <ul className="pm-team-list">
+                          <ul className="pm-team-chips">
                             {team.map((member) => (
                               <li
                                 key={member.id}
-                                className={`pm-team-member ${teamFilter === String(member.id) ? "pm-team-member--active" : ""}`}
+                                className={`pm-team-chip ${teamFilter === String(member.id) ? "pm-team-chip--active" : ""}`}
+                                title={[member.position, member.email?.trim()].filter(Boolean).join(" · ")}
                               >
                                 <span className="pm-team-avatar">{initials(member.name)}</span>
-                                <div className="pm-team-member-info">
+                                <span className="pm-team-chip-text">
                                   <strong>{member.name}</strong>
                                   <span>{member.position || member.department || "—"}</span>
-                                  {member.email && (
-                                    <span className="pm-team-member-email">{member.email.trim()}</span>
-                                  )}
-                                </div>
+                                </span>
                               </li>
                             ))}
                           </ul>
@@ -379,7 +453,7 @@ export default function PmProjectBoard() {
                         <div className="pm-row-actions">
                           <button
                             type="button"
-                            className="btn-secondary btn-sm"
+                            className={`btn-secondary btn-sm ${addingForProject === project.id ? "active" : ""}`}
                             onClick={() => openAddTask(project.id)}
                           >
                             <Plus size={14} /> Add task
@@ -405,79 +479,6 @@ export default function PmProjectBoard() {
                         </div>
                       </td>
                     </tr>
-
-                    {isAdding && (
-                      <tr className="pm-row-form">
-                        <td colSpan={5 + STATUS_DAYS}>
-                          <form className="pm-task-form" onSubmit={(e) => handleAddTask(e, project)}>
-                            <div className="pm-task-form-header">
-                              <div className="pm-task-form-title">
-                                <ListTodo size={18} />
-                                <div>
-                                  <strong>Add daily task</strong>
-                                  <span>{project.name} · {project.clientName}</span>
-                                </div>
-                              </div>
-                              <button
-                                type="button"
-                                className="icon-action"
-                                onClick={closeAddTask}
-                                title="Close"
-                              >
-                                <X size={18} />
-                              </button>
-                            </div>
-
-                            <div className="pm-task-form-body">
-                              <div className="pm-task-form-row">
-                                <label>
-                                  Date
-                                  <input
-                                    type="date"
-                                    value={getTaskForm(project.id).date}
-                                    onChange={(e) => setTaskForm(project.id, { date: e.target.value })}
-                                    required
-                                  />
-                                </label>
-                                <label>
-                                  Task status
-                                  <select
-                                    value={getTaskForm(project.id).taskStatus}
-                                    onChange={(e) => setTaskForm(project.id, { taskStatus: e.target.value })}
-                                    required
-                                  >
-                                    {TASK_STATUS_OPTIONS.map((opt) => (
-                                      <option key={opt} value={opt}>{opt}</option>
-                                    ))}
-                                  </select>
-                                </label>
-                              </div>
-                              <label className="pm-task-form-description">
-                                Task / work description
-                                <textarea
-                                  rows={4}
-                                  value={getTaskForm(project.id).content}
-                                  onChange={(e) => setTaskForm(project.id, { content: e.target.value })}
-                                  placeholder="What was done today, blockers, next steps..."
-                                  required
-                                  autoFocus
-                                />
-                              </label>
-                            </div>
-
-                            <div className="pm-task-form-footer">
-                              <button type="button" className="btn-secondary" onClick={closeAddTask}>
-                                Cancel
-                              </button>
-                              <button type="submit" className="btn-primary" disabled={saving}>
-                                <Plus size={16} />
-                                {saving ? "Saving..." : "Save task"}
-                              </button>
-                            </div>
-                          </form>
-                        </td>
-                      </tr>
-                    )}
 
                     {isExpanded && (
                       <tr className="pm-row-detail">
