@@ -59,6 +59,10 @@ function getProjectTeam(project, employeeById) {
     .filter(Boolean);
 }
 
+function isCompletedProject(project) {
+  return (project.status || "").toLowerCase() === "completed";
+}
+
 export default function PmProjectBoard() {
   const [projects, setProjects] = useState([]);
   const [employees, setEmployees] = useState([]);
@@ -77,23 +81,28 @@ export default function PmProjectBoard() {
   const employeeById = Object.fromEntries(employees.map((e) => [e.id, e]));
   const employeeMap = Object.fromEntries(employees.map((e) => [e.id, e.name]));
 
+  const boardProjects = useMemo(
+    () => projects.filter((p) => !isCompletedProject(p)),
+    [projects]
+  );
+
   const owners = useMemo(() => {
-    const ownerIds = [...new Set(projects.map((p) => p.ownerId).filter(Boolean))];
+    const ownerIds = [...new Set(boardProjects.map((p) => p.ownerId).filter(Boolean))];
     return ownerIds
       .map((id) => ({ id, name: employeeMap[id] || `ID ${id}` }))
       .sort((a, b) => a.name.localeCompare(b.name));
-  }, [projects, employeeMap]);
+  }, [boardProjects, employeeMap]);
 
   const teamMembers = useMemo(() => {
-    const ids = [...new Set(projects.flatMap((p) => p.assignedEmployeeIds || []))];
+    const ids = [...new Set(boardProjects.flatMap((p) => p.assignedEmployeeIds || []))];
     return ids
       .map((id) => employeeById[id])
       .filter(Boolean)
       .sort((a, b) => a.name.localeCompare(b.name));
-  }, [projects, employeeById]);
+  }, [boardProjects, employeeById]);
 
   const filteredProjects = useMemo(() => {
-    return projects.filter((project) => {
+    return boardProjects.filter((project) => {
       const ownerMatch =
         ownerFilter === "all" ||
         (ownerFilter === "unassigned" && !project.ownerId) ||
@@ -107,11 +116,11 @@ export default function PmProjectBoard() {
 
       return ownerMatch && teamMatch;
     });
-  }, [projects, ownerFilter, teamFilter]);
+  }, [boardProjects, ownerFilter, teamFilter]);
 
   const addingProject = useMemo(
-    () => projects.find((p) => p.id === addingForProject) || null,
-    [projects, addingForProject]
+    () => boardProjects.find((p) => p.id === addingForProject) || null,
+    [boardProjects, addingForProject]
   );
 
   const updatesByProject = useMemo(() => {
@@ -284,7 +293,7 @@ export default function PmProjectBoard() {
           </label>
         </div>
         <span className="pm-board-meta">
-          Showing {filteredProjects.length} of {projects.length} project{projects.length !== 1 ? "s" : ""} · Last {STATUS_DAYS} days
+          Showing {filteredProjects.length} of {boardProjects.length} active project{boardProjects.length !== 1 ? "s" : ""} · Last {STATUS_DAYS} days
         </span>
       </div>
 
