@@ -11,6 +11,7 @@
       2,
       3
     ],
+    "ownerId": 5,
     "clientId": 1
   },
   {
@@ -24,6 +25,7 @@
     "assignedEmployeeIds": [
       3
     ],
+    "ownerId": 4,
     "createdAt": "2026-06-10T10:00:00.000Z"
   },
   {
@@ -37,6 +39,7 @@
       4,
       7
     ],
+    "ownerId": 5,
     "name": "MBM CRM",
     "clientId": 2,
     "clientName": "Globex",

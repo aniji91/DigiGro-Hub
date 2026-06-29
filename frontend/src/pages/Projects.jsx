@@ -64,6 +64,11 @@ export default function Projects() {
       render: (ids) =>
         (ids || []).map((id) => employeeMap[id] || `ID ${id}`).join(", ") || "—",
     },
+    {
+      key: "ownerId",
+      label: "Owner",
+      render: (id) => employeeMap[id] || "—",
+    },
   ];
 
   async function load() {
@@ -113,6 +118,7 @@ export default function Projects() {
       startDate: row.startDate || "",
       endDate: row.endDate || "",
       assignedEmployeeIds: row.assignedEmployeeIds || [],
+      ownerId: row.ownerId ? String(row.ownerId) : "",
       projectType: row.projectType || "website_creation",
       existingSiteUrl: row.existingSiteUrl || "",
       referenceSites:
@@ -228,6 +234,7 @@ export default function Projects() {
         ...form,
         clientId: form.clientId ? Number(form.clientId) : undefined,
         assignedEmployeeIds: form.assignedEmployeeIds.map(Number),
+        ownerId: form.ownerId ? Number(form.ownerId) : null,
         referenceSites: form.referenceSites.filter((s) => s.url.trim()),
       };
       if (editing) {
@@ -396,6 +403,20 @@ export default function Projects() {
                       value={form.endDate}
                       onChange={(e) => setForm({ ...form, endDate: e.target.value })}
                     />
+                  </label>
+                  <label>
+                    Project owner
+                    <select
+                      value={form.ownerId}
+                      onChange={(e) => setForm({ ...form, ownerId: e.target.value })}
+                    >
+                      <option value="">Select owner</option>
+                      {employees.map((emp) => (
+                        <option key={emp.id} value={emp.id}>
+                          {emp.name} — {emp.position}
+                        </option>
+                      ))}
+                    </select>
                   </label>
                 </div>
                 <label className="full-width-field">

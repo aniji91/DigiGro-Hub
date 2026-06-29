@@ -63,6 +63,7 @@ CREATE TABLE IF NOT EXISTS projects (
   start_date DATE NULL,
   end_date DATE NULL,
   assigned_employee_ids JSON NULL,
+  owner_id INT NULL,
   project_type VARCHAR(50) NULL,
   existing_site_url TEXT NULL,
   reference_sites JSON NULL,

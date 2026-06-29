@@ -44,7 +44,7 @@ export default function ProductManagerDashboard() {
               </li>
             ))}
           </ul>
-          <Link to="/projects" className="panel-link">View all projects →</Link>
+          <Link to="/pm-board" className="panel-link">Open status board →</Link>
         </div>
         <div className="panel">
           <h3>Recent Work Updates</h3>

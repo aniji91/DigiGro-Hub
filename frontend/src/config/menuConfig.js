@@ -44,6 +44,13 @@ export const MENU_ITEMS = [
     roles: ["superadmin", "admin", "product_manager"],
   },
   {
+    key: "pmBoard",
+    label: "Project Status Board",
+    path: "/pm-board",
+    icon: ClipboardList,
+    roles: ["superadmin", "admin", "product_manager"],
+  },
+  {
     key: "viewProjects",
     label: "View Projects",
     path: "/view-projects",

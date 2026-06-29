@@ -78,6 +78,13 @@ function normalizeProject(body, existing = {}) {
       ? (body.assignedEmployeeIds || []).map(Number)
       : existing.assignedEmployeeIds || [];
 
+  const ownerId =
+    body.ownerId !== undefined
+      ? body.ownerId === null || body.ownerId === ""
+        ? null
+        : Number(body.ownerId) || null
+      : existing.ownerId ?? null;
+
   return {
     name: body.name ?? existing.name,
     clientName: body.clientName ?? existing.clientName,
@@ -87,6 +94,7 @@ function normalizeProject(body, existing = {}) {
     startDate: body.startDate ?? existing.startDate,
     endDate: body.endDate !== undefined ? body.endDate : existing.endDate || "",
     assignedEmployeeIds,
+    ownerId,
     projectType: body.projectType ?? existing.projectType ?? "website_creation",
     existingSiteUrl:
       body.existingSiteUrl !== undefined

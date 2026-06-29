@@ -4768,3 +4768,202 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* PM Project Status Board */
+.pm-board-toolbar {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+}
+
+.pm-board-filters label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.pm-board-filters select {
+  min-width: 220px;
+}
+
+.pm-board-meta {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+}
+
+.pm-board-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: #fff;
+}
+
+.pm-board-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+
+.pm-board-table th,
+.pm-board-table td {
+  padding: 0.75rem 0.85rem;
+  border-bottom: 1px solid #eef0f3;
+  vertical-align: top;
+  text-align: left;
+}
+
+.pm-board-table thead th {
+  background: #f9fafb;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.pm-col-project {
+  min-width: 180px;
+}
+
+.pm-col-owner {
+  min-width: 120px;
+}
+
+.pm-col-status {
+  min-width: 110px;
+}
+
+.pm-col-day {
+  min-width: 150px;
+  max-width: 200px;
+}
+
+.pm-col-actions {
+  min-width: 200px;
+}
+
+.pm-board-client {
+  display: block;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  margin-top: 0.2rem;
+}
+
+.pm-day-empty {
+  color: #d1d5db;
+}
+
+.pm-day-tasks {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.pm-day-task p {
+  margin: 0.25rem 0 0;
+  font-size: 0.8rem;
+  line-height: 1.35;
+  color: #374151;
+}
+
+.pm-row-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.pm-link-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  text-decoration: none;
+}
+
+.pm-row-active td {
+  background: #fffaf8;
+}
+
+.pm-row-form td,
+.pm-row-detail td {
+  background: #f9fafb;
+  padding: 0;
+}
+
+.pm-inline-form {
+  padding: 1rem 1.25rem;
+  border-top: 1px dashed #e5e7eb;
+}
+
+.pm-inline-form h4 {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.92rem;
+  margin-bottom: 0.75rem;
+}
+
+.pm-inline-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.pm-inline-form-grid .span-full {
+  grid-column: 1 / -1;
+}
+
+.pm-detail-panel {
+  padding: 1rem 1.25rem 1.25rem;
+  border-top: 1px dashed #e5e7eb;
+}
+
+.pm-detail-panel h4 {
+  font-size: 0.92rem;
+  margin-bottom: 0.75rem;
+}
+
+.pm-detail-timeline {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  margin-bottom: 0.75rem;
+}
+
+.pm-detail-day h5 {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  margin-bottom: 0.45rem;
+}
+
+.pm-detail-day ul {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.pm-detail-day li {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 0.65rem 0.75rem;
+}
+
+.pm-detail-day li p {
+  margin: 0.35rem 0 0.25rem;
+  font-size: 0.85rem;
+}
+
+@media (max-width: 900px) {
+  .pm-inline-form-grid {
+    grid-template-columns: 1fr;
+  }
+}

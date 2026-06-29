@@ -21,6 +21,7 @@ export const EMPTY_PROJECT = {
   startDate: "",
   endDate: "",
   assignedEmployeeIds: [],
+  ownerId: "",
   projectType: "website_creation",
   existingSiteUrl: "",
   referenceSites: [{ label: "", url: "" }],

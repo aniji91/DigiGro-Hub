@@ -16,6 +16,7 @@ import Roles from "./pages/Roles";
 import Settings from "./pages/Settings";
 import Announcements from "./pages/Announcements";
 import ViewProjects from "./pages/ViewProjects";
+import PmProjectBoard from "./pages/PmProjectBoard";
 import { useAuth } from "./context/AuthContext";
 import "./App.css";
 
@@ -65,6 +66,7 @@ function App() {
             <Route path="projects" element={<ModuleRoute module="projects"><Projects /></ModuleRoute>} />
             <Route path="my-projects" element={<ViewProjectsRoute />} />
             <Route path="view-projects/:projectId?" element={<ViewProjectsRoute />} />
+            <Route path="pm-board" element={<ModuleRoute module="projects"><PmProjectBoard /></ModuleRoute>} />
             <Route path="daily-work" element={<ModuleRoute module="workLogs"><DailyWork /></ModuleRoute>} />
             <Route path="leaves" element={<ModuleRoute module="leaves"><Leaves /></ModuleRoute>} />
             <Route path="holidays" element={<ModuleRoute module="holidays"><HolidayCalendar /></ModuleRoute>} />
