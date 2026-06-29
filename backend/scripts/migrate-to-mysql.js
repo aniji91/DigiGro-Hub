@@ -140,10 +140,10 @@ async function syncNormalizedTables(connection) {
       await connection.query(
         `INSERT INTO projects
          (id, name, client_name, client_id, description, status, start_date, end_date,
-          assigned_employee_ids, project_type, existing_site_url, reference_sites, suggestions,
+          assigned_employee_ids, owner_id, project_type, existing_site_url, reference_sites, suggestions,
           target_audience, page_scope, tech_preferences, documents, staging_details,
           production_details, external_crm_integrations, created_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
           item.id,
           item.name,
@@ -154,6 +154,7 @@ async function syncNormalizedTables(connection) {
           toDate(item.startDate),
           toDate(item.endDate),
           JSON.stringify(item.assignedEmployeeIds || []),
+          item.ownerId || null,
           item.projectType || null,
           item.existingSiteUrl || null,
           JSON.stringify(item.referenceSites || []),

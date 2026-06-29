@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState, Fragment } from "react";
 import { Link } from "react-router-dom";
-import { Plus, ChevronDown, ChevronUp, ExternalLink, ListTodo } from "lucide-react";
+import { Plus, ChevronDown, ChevronUp, ExternalLink, ListTodo, X } from "lucide-react";
 import { fetchProjectUpdates, projectUpdatesApi, projectsApi } from "../api/crmApi";
 import { fetchEmployees } from "../api/employeeApi";
 import PageHeader from "../components/PageHeader";
@@ -55,6 +55,7 @@ export default function PmProjectBoard() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [savingOwnerId, setSavingOwnerId] = useState(null);
 
   const statusDays = useMemo(() => getLastNDays(STATUS_DAYS), []);
   const employeeMap = Object.fromEntries(employees.map((e) => [e.id, e.name]));
@@ -154,6 +155,22 @@ export default function PmProjectBoard() {
     setAddingForProject(null);
   }
 
+  async function handleOwnerChange(project, ownerId) {
+    const nextOwnerId = ownerId ? Number(ownerId) : null;
+    if (project.ownerId === nextOwnerId) return;
+
+    try {
+      setSavingOwnerId(project.id);
+      setError("");
+      const updated = await projectsApi.update(project.id, { ownerId: nextOwnerId });
+      setProjects((prev) => prev.map((p) => (p.id === updated.id ? updated : p)));
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setSavingOwnerId(null);
+    }
+  }
+
   async function handleAddTask(e, project) {
     e.preventDefault();
     const form = getTaskForm(project.id);
@@ -242,9 +259,22 @@ export default function PmProjectBoard() {
                         <span className="pm-board-client">{project.clientName}</span>
                       </td>
                       <td className="pm-col-owner">
-                        {project.ownerId ? employeeMap[project.ownerId] || "—" : (
-                          <span className="muted">Unassigned</span>
-                        )}
+                        <label className="pm-owner-select">
+                          <span className="sr-only">Assign owner for {project.name}</span>
+                          <select
+                            value={project.ownerId ? String(project.ownerId) : ""}
+                            onChange={(e) => handleOwnerChange(project, e.target.value)}
+                            disabled={savingOwnerId === project.id}
+                            className={!project.ownerId ? "pm-owner-select--empty" : ""}
+                          >
+                            <option value="">Assign owner…</option>
+                            {employees.map((emp) => (
+                              <option key={emp.id} value={emp.id}>
+                                {emp.name}
+                              </option>
+                            ))}
+                          </select>
+                        </label>
                       </td>
                       <td className="pm-col-status">
                         <span className={`status-pill status-pill--${statusClass(project.status)}`}>
@@ -306,37 +336,53 @@ export default function PmProjectBoard() {
                     {isAdding && (
                       <tr className="pm-row-form">
                         <td colSpan={4 + STATUS_DAYS}>
-                          <form className="pm-inline-form" onSubmit={(e) => handleAddTask(e, project)}>
-                            <h4>
-                              <ListTodo size={16} />
-                              Add daily task — {project.name}
-                            </h4>
-                            <div className="pm-inline-form-grid">
-                              <label>
-                                Date
-                                <input
-                                  type="date"
-                                  value={getTaskForm(project.id).date}
-                                  onChange={(e) => setTaskForm(project.id, { date: e.target.value })}
-                                  required
-                                />
-                              </label>
-                              <label>
-                                Task status
-                                <select
-                                  value={getTaskForm(project.id).taskStatus}
-                                  onChange={(e) => setTaskForm(project.id, { taskStatus: e.target.value })}
-                                  required
-                                >
-                                  {TASK_STATUS_OPTIONS.map((opt) => (
-                                    <option key={opt} value={opt}>{opt}</option>
-                                  ))}
-                                </select>
-                              </label>
-                              <label className="span-full">
+                          <form className="pm-task-form" onSubmit={(e) => handleAddTask(e, project)}>
+                            <div className="pm-task-form-header">
+                              <div className="pm-task-form-title">
+                                <ListTodo size={18} />
+                                <div>
+                                  <strong>Add daily task</strong>
+                                  <span>{project.name} · {project.clientName}</span>
+                                </div>
+                              </div>
+                              <button
+                                type="button"
+                                className="icon-action"
+                                onClick={closeAddTask}
+                                title="Close"
+                              >
+                                <X size={18} />
+                              </button>
+                            </div>
+
+                            <div className="pm-task-form-body">
+                              <div className="pm-task-form-row">
+                                <label>
+                                  Date
+                                  <input
+                                    type="date"
+                                    value={getTaskForm(project.id).date}
+                                    onChange={(e) => setTaskForm(project.id, { date: e.target.value })}
+                                    required
+                                  />
+                                </label>
+                                <label>
+                                  Task status
+                                  <select
+                                    value={getTaskForm(project.id).taskStatus}
+                                    onChange={(e) => setTaskForm(project.id, { taskStatus: e.target.value })}
+                                    required
+                                  >
+                                    {TASK_STATUS_OPTIONS.map((opt) => (
+                                      <option key={opt} value={opt}>{opt}</option>
+                                    ))}
+                                  </select>
+                                </label>
+                              </div>
+                              <label className="pm-task-form-description">
                                 Task / work description
                                 <textarea
-                                  rows={2}
+                                  rows={4}
                                   value={getTaskForm(project.id).content}
                                   onChange={(e) => setTaskForm(project.id, { content: e.target.value })}
                                   placeholder="What was done today, blockers, next steps..."
@@ -345,11 +391,13 @@ export default function PmProjectBoard() {
                                 />
                               </label>
                             </div>
-                            <div className="form-actions">
+
+                            <div className="pm-task-form-footer">
                               <button type="button" className="btn-secondary" onClick={closeAddTask}>
                                 Cancel
                               </button>
                               <button type="submit" className="btn-primary" disabled={saving}>
+                                <Plus size={16} />
                                 {saving ? "Saving..." : "Save task"}
                               </button>
                             </div>

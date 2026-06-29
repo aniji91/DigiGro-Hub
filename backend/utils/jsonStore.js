@@ -81,6 +81,38 @@ async function initDatabase() {
   }
 
   initialized = true;
+  await syncProjectOwnersFromSeed();
+}
+
+async function syncProjectOwnersFromSeed() {
+  if (!isMysqlEnabled()) return;
+
+  const seedPath = path.join(__dirname, "..", "data", "projects.json");
+  if (!fs.existsSync(seedPath)) return;
+
+  const seed = readFileData(seedPath);
+  const cached = cache.get("projects");
+  if (!Array.isArray(cached) || !Array.isArray(seed)) return;
+
+  const seedOwners = Object.fromEntries(
+    seed.filter((p) => p.ownerId).map((p) => [p.id, p.ownerId])
+  );
+  if (Object.keys(seedOwners).length === 0) return;
+
+  let changed = false;
+  const updated = cached.map((project) => {
+    if (!project.ownerId && seedOwners[project.id]) {
+      changed = true;
+      return { ...project, ownerId: seedOwners[project.id] };
+    }
+    return project;
+  });
+
+  if (changed) {
+    cache.set("projects", updated);
+    await persistCollection("projects", updated);
+    console.log("Synced project owner IDs from seed data");
+  }
 }
 
 function readData(filePath) {
