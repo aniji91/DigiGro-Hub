@@ -250,9 +250,13 @@ export default function PmProjectBoard() {
 
       <div className="pm-board-toolbar">
         <div className="pm-board-filters">
-          <label>
-            Filter by owner
-            <select value={ownerFilter} onChange={(e) => setOwnerFilter(e.target.value)}>
+          <label className="pm-field pm-field--filter">
+            <span className="pm-field__label">Filter by owner</span>
+            <select
+              className="pm-field__control pm-field__control--select"
+              value={ownerFilter}
+              onChange={(e) => setOwnerFilter(e.target.value)}
+            >
               <option value="all">All owners</option>
               <option value="unassigned">Unassigned owner</option>
               {owners.map((owner) => (
@@ -262,9 +266,13 @@ export default function PmProjectBoard() {
               ))}
             </select>
           </label>
-          <label>
-            Filter by team member
-            <select value={teamFilter} onChange={(e) => setTeamFilter(e.target.value)}>
+          <label className="pm-field pm-field--filter">
+            <span className="pm-field__label">Filter by team member</span>
+            <select
+              className="pm-field__control pm-field__control--select"
+              value={teamFilter}
+              onChange={(e) => setTeamFilter(e.target.value)}
+            >
               <option value="all">All team members</option>
               <option value="unassigned">No team assigned</option>
               {teamMembers.map((member) => (
@@ -307,18 +315,20 @@ export default function PmProjectBoard() {
 
           <div className="pm-task-form-body">
             <div className="pm-task-form-fields">
-              <label>
-                Date
+              <label className="pm-field">
+                <span className="pm-field__label">Date</span>
                 <input
                   type="date"
+                  className="pm-field__control pm-field__control--date"
                   value={getTaskForm(addingProject.id).date}
                   onChange={(e) => setTaskForm(addingProject.id, { date: e.target.value })}
                   required
                 />
               </label>
-              <label>
-                Task status
+              <label className="pm-field">
+                <span className="pm-field__label">Task status</span>
                 <select
+                  className="pm-field__control pm-field__control--select"
                   value={getTaskForm(addingProject.id).taskStatus}
                   onChange={(e) => setTaskForm(addingProject.id, { taskStatus: e.target.value })}
                   required
@@ -328,9 +338,10 @@ export default function PmProjectBoard() {
                   ))}
                 </select>
               </label>
-              <label className="pm-task-form-description">
-                Task / work description
+              <label className="pm-field pm-field--grow">
+                <span className="pm-field__label">Task / work description</span>
                 <textarea
+                  className="pm-field__control pm-field__control--textarea"
                   rows={3}
                   value={getTaskForm(addingProject.id).content}
                   onChange={(e) => setTaskForm(addingProject.id, { content: e.target.value })}
@@ -391,7 +402,7 @@ export default function PmProjectBoard() {
                             value={project.ownerId ? String(project.ownerId) : ""}
                             onChange={(e) => handleOwnerChange(project, e.target.value)}
                             disabled={savingOwnerId === project.id}
-                            className={!project.ownerId ? "pm-owner-select--empty" : ""}
+                            className={`pm-field__control pm-field__control--select pm-field__control--compact ${!project.ownerId ? "pm-field__control--placeholder" : ""}`}
                           >
                             <option value="">Assign owner…</option>
                             {employees.map((emp) => (
