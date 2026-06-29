@@ -32,7 +32,8 @@ const MODULE_ACCESS = {
     chat: "read",
   },
   product_manager: {
-    projects: "cru",
+    clients: "cru",
+    projects: "crud",
     employees: "read",
     workLogs: "cru",
     announcements: "read",

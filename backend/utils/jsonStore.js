@@ -82,6 +82,39 @@ async function initDatabase() {
 
   initialized = true;
   await syncProjectOwnersFromSeed();
+  await syncSystemRolePermissionsFromSeed();
+}
+
+async function syncSystemRolePermissionsFromSeed() {
+  if (!isMysqlEnabled()) return;
+
+  const seedPath = path.join(__dirname, "..", "data", "roles.json");
+  if (!fs.existsSync(seedPath)) return;
+
+  const seed = readFileData(seedPath);
+  const cached = cache.get("roles");
+  if (!Array.isArray(cached) || !Array.isArray(seed)) return;
+
+  const seedByKey = Object.fromEntries(seed.map((role) => [role.key, role]));
+  let changed = false;
+  const updated = cached.map((role) => {
+    const seedRole = seedByKey[role.key];
+    if (!seedRole?.isSystem || !seedRole.modulePermissions) return role;
+
+    const merged = { ...role.modulePermissions, ...seedRole.modulePermissions };
+    if (JSON.stringify(merged) === JSON.stringify(role.modulePermissions || {})) {
+      return role;
+    }
+
+    changed = true;
+    return { ...role, modulePermissions: merged };
+  });
+
+  if (changed) {
+    cache.set("roles", updated);
+    await persistCollection("roles", updated);
+    console.log("Synced system role permissions from seed data");
+  }
 }
 
 async function syncProjectOwnersFromSeed() {

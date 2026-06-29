@@ -27,7 +27,7 @@ export const MENU_ITEMS = [
     label: "Clients",
     path: "/clients",
     icon: Building2,
-    roles: ["superadmin"],
+    roles: ["superadmin", "product_manager"],
   },
   {
     key: "employees",

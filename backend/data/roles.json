@@ -78,7 +78,8 @@
       "admin"
     ],
     "modulePermissions": {
-      "projects": "cru",
+      "clients": "cru",
+      "projects": "crud",
       "employees": "read",
       "workLogs": "cru",
       "announcements": "read",

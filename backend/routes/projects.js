@@ -9,7 +9,7 @@ const router = express.Router();
 const FILE = dataPath("projects.json");
 const CREATE_ROLES = ["superadmin", "admin", "product_manager"];
 const UPDATE_ROLES = ["superadmin", "admin", "product_manager"];
-const DELETE_ROLES = ["superadmin", "admin"];
+const DELETE_ROLES = ["superadmin", "admin", "product_manager"];
 
 function canUpdateEnvironment(user, project) {
   if (UPDATE_ROLES.includes(user.role)) return true;
