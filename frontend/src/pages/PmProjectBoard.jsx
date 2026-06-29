@@ -44,11 +44,27 @@ function formatFullDate(dateStr) {
   });
 }
 
+function initials(name = "") {
+  return name
+    .split(" ")
+    .map((part) => part[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
+}
+
+function getProjectTeam(project, employeeById) {
+  return (project.assignedEmployeeIds || [])
+    .map((id) => employeeById[id])
+    .filter(Boolean);
+}
+
 export default function PmProjectBoard() {
   const [projects, setProjects] = useState([]);
   const [employees, setEmployees] = useState([]);
   const [updates, setUpdates] = useState([]);
   const [ownerFilter, setOwnerFilter] = useState("all");
+  const [teamFilter, setTeamFilter] = useState("all");
   const [expandedProjectId, setExpandedProjectId] = useState(null);
   const [addingForProject, setAddingForProject] = useState(null);
   const [taskForms, setTaskForms] = useState({});
@@ -58,6 +74,7 @@ export default function PmProjectBoard() {
   const [savingOwnerId, setSavingOwnerId] = useState(null);
 
   const statusDays = useMemo(() => getLastNDays(STATUS_DAYS), []);
+  const employeeById = Object.fromEntries(employees.map((e) => [e.id, e]));
   const employeeMap = Object.fromEntries(employees.map((e) => [e.id, e.name]));
 
   const owners = useMemo(() => {
@@ -67,11 +84,30 @@ export default function PmProjectBoard() {
       .sort((a, b) => a.name.localeCompare(b.name));
   }, [projects, employeeMap]);
 
+  const teamMembers = useMemo(() => {
+    const ids = [...new Set(projects.flatMap((p) => p.assignedEmployeeIds || []))];
+    return ids
+      .map((id) => employeeById[id])
+      .filter(Boolean)
+      .sort((a, b) => a.name.localeCompare(b.name));
+  }, [projects, employeeById]);
+
   const filteredProjects = useMemo(() => {
-    if (ownerFilter === "all") return projects;
-    if (ownerFilter === "unassigned") return projects.filter((p) => !p.ownerId);
-    return projects.filter((p) => String(p.ownerId) === ownerFilter);
-  }, [projects, ownerFilter]);
+    return projects.filter((project) => {
+      const ownerMatch =
+        ownerFilter === "all" ||
+        (ownerFilter === "unassigned" && !project.ownerId) ||
+        String(project.ownerId) === ownerFilter;
+
+      const assignedIds = (project.assignedEmployeeIds || []).map(String);
+      const teamMatch =
+        teamFilter === "all" ||
+        (teamFilter === "unassigned" && assignedIds.length === 0) ||
+        assignedIds.includes(teamFilter);
+
+      return ownerMatch && teamMatch;
+    });
+  }, [projects, ownerFilter, teamFilter]);
 
   const updatesByProject = useMemo(() => {
     const map = new Map();
@@ -212,8 +248,8 @@ export default function PmProjectBoard() {
           <label>
             Filter by owner
             <select value={ownerFilter} onChange={(e) => setOwnerFilter(e.target.value)}>
-              <option value="all">All owners ({projects.length})</option>
-              <option value="unassigned">Unassigned</option>
+              <option value="all">All owners</option>
+              <option value="unassigned">Unassigned owner</option>
               {owners.map((owner) => (
                 <option key={owner.id} value={String(owner.id)}>
                   {owner.name}
@@ -221,9 +257,21 @@ export default function PmProjectBoard() {
               ))}
             </select>
           </label>
+          <label>
+            Filter by team member
+            <select value={teamFilter} onChange={(e) => setTeamFilter(e.target.value)}>
+              <option value="all">All team members</option>
+              <option value="unassigned">No team assigned</option>
+              {teamMembers.map((member) => (
+                <option key={member.id} value={String(member.id)}>
+                  {member.name} — {member.position}
+                </option>
+              ))}
+            </select>
+          </label>
         </div>
         <span className="pm-board-meta">
-          Showing {filteredProjects.length} project{filteredProjects.length !== 1 ? "s" : ""} · Last {STATUS_DAYS} days
+          Showing {filteredProjects.length} of {projects.length} project{projects.length !== 1 ? "s" : ""} · Last {STATUS_DAYS} days
         </span>
       </div>
 
@@ -238,6 +286,7 @@ export default function PmProjectBoard() {
               <tr>
                 <th className="pm-col-project">Project</th>
                 <th className="pm-col-owner">Owner</th>
+                <th className="pm-col-team">Team</th>
                 <th className="pm-col-status">Status</th>
                 {statusDays.map((day) => (
                   <th key={day} className="pm-col-day">{formatDayHeader(day)}</th>
@@ -250,6 +299,7 @@ export default function PmProjectBoard() {
                 const isExpanded = expandedProjectId === project.id;
                 const isAdding = addingForProject === project.id;
                 const allStatus = getAllStatusUpdates(project.id);
+                const team = getProjectTeam(project, employeeById);
 
                 return (
                   <Fragment key={project.id}>
@@ -275,6 +325,29 @@ export default function PmProjectBoard() {
                             ))}
                           </select>
                         </label>
+                      </td>
+                      <td className="pm-col-team">
+                        {team.length === 0 ? (
+                          <span className="muted pm-team-empty">No team assigned</span>
+                        ) : (
+                          <ul className="pm-team-list">
+                            {team.map((member) => (
+                              <li
+                                key={member.id}
+                                className={`pm-team-member ${teamFilter === String(member.id) ? "pm-team-member--active" : ""}`}
+                              >
+                                <span className="pm-team-avatar">{initials(member.name)}</span>
+                                <div className="pm-team-member-info">
+                                  <strong>{member.name}</strong>
+                                  <span>{member.position || member.department || "—"}</span>
+                                  {member.email && (
+                                    <span className="pm-team-member-email">{member.email.trim()}</span>
+                                  )}
+                                </div>
+                              </li>
+                            ))}
+                          </ul>
+                        )}
                       </td>
                       <td className="pm-col-status">
                         <span className={`status-pill status-pill--${statusClass(project.status)}`}>
@@ -335,7 +408,7 @@ export default function PmProjectBoard() {
 
                     {isAdding && (
                       <tr className="pm-row-form">
-                        <td colSpan={4 + STATUS_DAYS}>
+                        <td colSpan={5 + STATUS_DAYS}>
                           <form className="pm-task-form" onSubmit={(e) => handleAddTask(e, project)}>
                             <div className="pm-task-form-header">
                               <div className="pm-task-form-title">
@@ -408,7 +481,7 @@ export default function PmProjectBoard() {
 
                     {isExpanded && (
                       <tr className="pm-row-detail">
-                        <td colSpan={4 + STATUS_DAYS}>
+                        <td colSpan={5 + STATUS_DAYS}>
                           <div className="pm-detail-panel">
                             <h4>All daily tasks — {project.name}</h4>
                             {allStatus.length === 0 ? (
