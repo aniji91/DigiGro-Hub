@@ -52,9 +52,12 @@ if (process.env.FRONTEND_URL) {
 app.use(express.json({ limit: "10mb" }));
 
 app.get("/api/health", (req, res) => {
+  const { isDatabaseReady, getCollectionCount } = require("./utils/jsonStore");
   res.json({
     ok: true,
     mysql: isMysqlEnabled(),
+    dbReady: isDatabaseReady(),
+    projects: getCollectionCount("projects"),
     frontend: Boolean(FRONTEND_DIST),
     port: PORT,
   });
@@ -116,7 +119,14 @@ async function bootstrapData() {
   console.log(`Employee login accounts ready: ${employees.length}`);
 }
 
-function startServer() {
+async function startServer() {
+  try {
+    await bootstrapData();
+  } catch (err) {
+    console.error("Data bootstrap failed:", err.message);
+    process.exit(1);
+  }
+
   app.listen(PORT, "0.0.0.0", () => {
     console.log(`Server running on port ${PORT}${isProduction ? " (production)" : ""}`);
     if (FRONTEND_DIST) {
@@ -124,10 +134,6 @@ function startServer() {
     } else {
       console.warn("Frontend dist not found — API only mode");
     }
-
-    bootstrapData().catch((err) => {
-      console.error("Data bootstrap failed:", err.message);
-    });
   });
 }
 

@@ -3,8 +3,6 @@ const path = require("path");
 const { getPool, isMysqlEnabled } = require("../db/pool");
 
 const cache = new Map();
-const persistQueue = new Map();
-let persistTimer = null;
 let initialized = false;
 
 function collectionKey(filePath) {
@@ -14,6 +12,23 @@ function collectionKey(filePath) {
 function readFileData(filePath) {
   const raw = fs.readFileSync(filePath, "utf-8");
   return JSON.parse(raw);
+}
+
+function parseJsonColumn(value, fallback) {
+  if (value == null) return fallback;
+  if (typeof value === "string") {
+    try {
+      return JSON.parse(value);
+    } catch {
+      return fallback;
+    }
+  }
+  return value;
+}
+
+function toIsoDate(value) {
+  if (!value) return "";
+  return String(value).slice(0, 10);
 }
 
 async function persistCollection(key, data) {
@@ -26,21 +41,48 @@ async function persistCollection(key, data) {
   );
 }
 
-function queuePersist(key, data) {
-  persistQueue.set(key, data);
-  if (persistTimer) return;
-  persistTimer = setTimeout(async () => {
-    persistTimer = null;
-    const entries = [...persistQueue.entries()];
-    persistQueue.clear();
-    for (const [entryKey, entryData] of entries) {
-      try {
-        await persistCollection(entryKey, entryData);
-      } catch (err) {
-        console.error(`Failed to persist collection "${entryKey}":`, err.message);
-      }
-    }
-  }, 25);
+function assertDatabaseReady(action, key) {
+  if (!initialized) {
+    throw new Error(`Database not ready for ${action} on "${key}"`);
+  }
+}
+
+async function restoreProjectsFromTableIfNeeded() {
+  const cached = cache.get("projects");
+  if (Array.isArray(cached) && cached.length > 0) return;
+
+  const pool = getPool();
+  const [rows] = await pool.query("SELECT * FROM projects ORDER BY id");
+  if (!rows.length) return;
+
+  const restored = rows.map((row) => ({
+    id: row.id,
+    name: row.name,
+    clientName: row.client_name || "",
+    clientId: row.client_id || null,
+    description: row.description || "",
+    status: row.status || "",
+    startDate: toIsoDate(row.start_date),
+    endDate: toIsoDate(row.end_date),
+    assignedEmployeeIds: parseJsonColumn(row.assigned_employee_ids, []),
+    ownerId: row.owner_id || null,
+    projectType: row.project_type || null,
+    existingSiteUrl: row.existing_site_url || "",
+    referenceSites: parseJsonColumn(row.reference_sites, []),
+    suggestions: row.suggestions || "",
+    targetAudience: row.target_audience || "",
+    pageScope: row.page_scope || "",
+    techPreferences: row.tech_preferences || "",
+    documents: parseJsonColumn(row.documents, []),
+    stagingDetails: parseJsonColumn(row.staging_details, null),
+    productionDetails: parseJsonColumn(row.production_details, null),
+    externalCrmIntegrations: parseJsonColumn(row.external_crm_integrations, []),
+    createdAt: row.created_at || null,
+  }));
+
+  cache.set("projects", restored);
+  await persistCollection("projects", restored);
+  console.log(`Restored ${restored.length} project(s) from projects table into app_collections`);
 }
 
 async function initDatabase() {
@@ -59,7 +101,9 @@ async function initDatabase() {
   }
 
   const [rows] = await pool.query("SELECT collection_name, data FROM app_collections");
+  const existingKeys = new Set();
   rows.forEach((row) => {
+    existingKeys.add(row.collection_name);
     cache.set(
       row.collection_name,
       typeof row.data === "string" ? JSON.parse(row.data) : row.data
@@ -73,13 +117,14 @@ async function initDatabase() {
     );
     for (const file of files) {
       const key = path.basename(file, ".json");
-      if (cache.has(key)) continue;
+      if (existingKeys.has(key)) continue;
       const data = readFileData(path.join(dataDir, file));
       cache.set(key, data);
       await persistCollection(key, data);
     }
   }
 
+  await restoreProjectsFromTableIfNeeded();
   initialized = true;
   await syncProjectOwnersFromSeed();
   await syncSystemRolePermissionsFromSeed();
@@ -152,13 +197,8 @@ function readData(filePath) {
   const key = collectionKey(filePath);
 
   if (isMysqlEnabled()) {
+    assertDatabaseReady("read", key);
     if (cache.has(key)) return cache.get(key);
-    if (fs.existsSync(filePath)) {
-      const data = readFileData(filePath);
-      cache.set(key, data);
-      queuePersist(key, data);
-      return data;
-    }
     const empty = [];
     cache.set(key, empty);
     return empty;
@@ -171,8 +211,11 @@ function writeData(filePath, data) {
   const key = collectionKey(filePath);
 
   if (isMysqlEnabled()) {
+    assertDatabaseReady("write", key);
     cache.set(key, data);
-    queuePersist(key, data);
+    persistCollection(key, data).catch((err) => {
+      console.error(`Failed to persist collection "${key}":`, err.message);
+    });
     return;
   }
 
@@ -187,4 +230,22 @@ function nextId(items) {
   return items.length > 0 ? Math.max(...items.map((item) => item.id)) + 1 : 1;
 }
 
-module.exports = { readData, writeData, dataPath, nextId, initDatabase, isMysqlEnabled };
+function isDatabaseReady() {
+  return !isMysqlEnabled() || initialized;
+}
+
+function getCollectionCount(key) {
+  const data = cache.get(key);
+  return Array.isArray(data) ? data.length : null;
+}
+
+module.exports = {
+  readData,
+  writeData,
+  dataPath,
+  nextId,
+  initDatabase,
+  isMysqlEnabled,
+  isDatabaseReady,
+  getCollectionCount,
+};
