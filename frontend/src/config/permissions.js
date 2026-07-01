@@ -40,6 +40,7 @@ const MODULE_ACCESS = {
     chat: "crud",
   },
   employee: {
+    projects: "read",
     myProjects: "read",
     workLogs: "cru",
     leaves: "cru",
