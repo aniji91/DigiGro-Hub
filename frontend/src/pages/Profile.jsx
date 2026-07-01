@@ -160,7 +160,7 @@ export default function Profile() {
             )}
 
             <div className="profile-form-actions">
-              <button type="submit" className="btn primary" disabled={profileSaving}>
+              <button type="submit" className="btn-primary profile-submit-btn" disabled={profileSaving}>
                 {profileSaving ? "Saving..." : "Save profile"}
               </button>
             </div>
@@ -222,7 +222,7 @@ export default function Profile() {
             </label>
 
             <div className="profile-form-actions">
-              <button type="submit" className="btn primary" disabled={passwordSaving}>
+              <button type="submit" className="btn-primary profile-submit-btn" disabled={passwordSaving}>
                 {passwordSaving ? "Updating..." : "Update password"}
               </button>
             </div>

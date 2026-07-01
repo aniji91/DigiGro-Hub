@@ -48,7 +48,12 @@ export default function CrmLayout() {
         <ChatToastStack />
         <div className="crm-main">
           {!onChatPage && !onProjectViewPage && (
-            <TopBar user={user} roleLabel={roleLabel} roleColor={ROLE_COLORS[user.role]} />
+            <TopBar
+              user={user}
+              roleLabel={roleLabel}
+              roleColor={ROLE_COLORS[user.role]}
+              onLogout={handleLogout}
+            />
           )}
           <div
             className={`crm-content ${onChatPage ? "crm-content--chat" : ""} ${onProjectViewPage ? "crm-content--full" : ""}`}

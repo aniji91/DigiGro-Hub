@@ -1,8 +1,8 @@
 import { useNavigate } from "react-router-dom";
-import { Bell, Search } from "lucide-react";
+import { Bell, LogOut, Search } from "lucide-react";
 import { useChatNotifications } from "../context/ChatNotificationContext";
 
-export default function TopBar({ user, roleLabel, roleColor }) {
+export default function TopBar({ user, roleLabel, roleColor, onLogout }) {
   const navigate = useNavigate();
   const {
     totalUnread,
@@ -46,6 +46,15 @@ export default function TopBar({ user, roleLabel, roleColor }) {
               {totalMentions > 0 ? "@" : totalUnread > 9 ? "9+" : totalUnread}
             </span>
           )}
+        </button>
+        <button
+          type="button"
+          className="topbar-logout"
+          onClick={onLogout}
+          title="Logout"
+        >
+          <LogOut size={16} />
+          <span>Logout</span>
         </button>
         <button
           type="button"
