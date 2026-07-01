@@ -23,8 +23,11 @@ const rolesRoutes = require("./routes/roles");
 const projectOnboardingRoutes = require("./routes/projectOnboarding");
 const announcementRoutes = require("./routes/announcements");
 const projectUpdateRoutes = require("./routes/projectUpdates");
+const dailyWorkRoutes = require("./routes/dailyWork");
+const { getPool } = require("./db/pool");
 const { syncAllProjectsOnboarding } = require("./utils/projectOnboarding");
 const { initLeaveAllocations } = require("./utils/leaveAllocationStore");
+const { syncDailyWorkCollectionsToSql } = require("./utils/dailyWorkSql");
 
 const app = express();
 const PORT = Number(process.env.PORT || 5000);
@@ -51,17 +54,32 @@ if (process.env.FRONTEND_URL) {
 
 app.use(express.json({ limit: "10mb" }));
 
-app.get("/api/health", (req, res) => {
+app.get("/api/health", async (req, res) => {
   const { isDatabaseReady, getCollectionCount } = require("./utils/jsonStore");
-  res.json({
+  const payload = {
     ok: true,
     mysql: isMysqlEnabled(),
     dbReady: isDatabaseReady(),
     projects: getCollectionCount("projects"),
     workLogs: getCollectionCount("work_logs"),
+    projectUpdates: getCollectionCount("project_updates"),
     frontend: Boolean(FRONTEND_DIST),
     port: PORT,
-  });
+  };
+
+  if (isMysqlEnabled()) {
+    try {
+      const pool = getPool();
+      const [[workLogsRow]] = await pool.query("SELECT COUNT(*) AS count FROM work_logs");
+      const [[updatesRow]] = await pool.query("SELECT COUNT(*) AS count FROM project_updates");
+      payload.workLogsTable = Number(workLogsRow.count);
+      payload.projectUpdatesTable = Number(updatesRow.count);
+    } catch (err) {
+      payload.tableCountsError = err.message;
+    }
+  }
+
+  res.json(payload);
 });
 
 app.use("/api/auth", authRoutes);
@@ -79,6 +97,7 @@ app.use("/api/roles", rolesRoutes);
 app.use("/api/project-onboarding", projectOnboardingRoutes);
 app.use("/api/announcements", announcementRoutes);
 app.use("/api/project-updates", projectUpdateRoutes);
+app.use("/api/daily-work", dailyWorkRoutes);
 app.use("/api/dashboard", dashboardRoutes);
 
 if (FRONTEND_DIST) {
@@ -100,6 +119,7 @@ async function bootstrapData() {
     try {
       await testConnection();
       await initDatabase();
+      await syncDailyWorkCollectionsToSql();
       const migrated = await initLeaveAllocations();
       if (migrated > 0) {
         console.log(`Migrated ${migrated} leave allocation(s) to leave_allocations table`);

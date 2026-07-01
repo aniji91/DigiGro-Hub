@@ -58,6 +58,18 @@ export async function fetchProjectUpdates(projectId) {
   return handleResponse(response);
 }
 
+export async function fetchDailyWork(filters = {}) {
+  const params = new URLSearchParams();
+  if (filters.projectId) params.set("projectId", filters.projectId);
+  if (filters.date) params.set("date", filters.date);
+  if (filters.employeeId) params.set("employeeId", filters.employeeId);
+  const query = params.toString();
+  const response = await fetch(`${API_BASE}/daily-work${query ? `?${query}` : ""}`, {
+    headers: getAuthHeaders(),
+  });
+  return handleResponse(response);
+}
+
 export async function fetchAnnouncements() {
   const response = await fetch(`${API_BASE}/announcements`, {
     headers: getAuthHeaders(),

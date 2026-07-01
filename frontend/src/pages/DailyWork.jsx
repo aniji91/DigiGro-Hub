@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import { fetchMyProjects, fetchProjectUpdates, projectsApi, workLogsApi } from "../api/crmApi";
+import { fetchDailyWork, fetchMyProjects, projectsApi, workLogsApi } from "../api/crmApi";
 import DataTable from "../components/DataTable";
 import Modal from "../components/Modal";
 import PageHeader from "../components/PageHeader";
@@ -112,23 +112,7 @@ export default function DailyWork() {
       .sort((a, b) => a.name.localeCompare(b.name));
   }, [feed]);
 
-  const displayedItems = useMemo(() => {
-    return feed.filter((item) => {
-      if (filterProject) {
-        if (filterProject === "none") {
-          if (item.projectId != null) return false;
-        } else if (item.projectId !== Number(filterProject)) {
-          return false;
-        }
-      }
-      if (filterEmployee) {
-        const id = Number(filterEmployee);
-        if (item.userId !== id && item.employeeId !== id) return false;
-      }
-      if (filterDate && item.date !== filterDate) return false;
-      return true;
-    });
-  }, [feed, filterProject, filterEmployee, filterDate]);
+  const displayedItems = feed;
 
   const totalHours = useMemo(
     () =>
@@ -185,15 +169,19 @@ export default function DailyWork() {
   }, [isTeamView]);
 
   async function load() {
+    setLoading(true);
     try {
       setError("");
-      const [logData, updateData, projectData] = await Promise.all([
-        workLogsApi.fetchAll(),
-        fetchProjectUpdates().catch(() => []),
+      const [dailyData, projectData] = await Promise.all([
+        fetchDailyWork({
+          projectId: filterProject,
+          date: filterDate,
+          employeeId: filterEmployee,
+        }),
         isTeamView ? projectsApi.fetchAll() : fetchMyProjects(),
       ]);
-      setWorkLogs(logData);
-      setProjectUpdates(updateData);
+      setWorkLogs(dailyData.workLogs);
+      setProjectUpdates(dailyData.projectUpdates);
       setProjects(projectData);
     } catch (err) {
       setError(err.message);
@@ -204,7 +192,7 @@ export default function DailyWork() {
 
   useEffect(() => {
     load();
-  }, [isTeamView]);
+  }, [isTeamView, filterProject, filterDate, filterEmployee]);
 
   useEffect(() => {
     if (!isTeamView && location.state?.projectId && projects.length > 0) {
@@ -238,20 +226,19 @@ export default function DailyWork() {
     try {
       setError("");
       if (editing) {
-        const updated = await workLogsApi.update(editing.id, {
+        await workLogsApi.update(editing.id, {
           hoursWorked: form.hoursWorked,
           workDescription: form.workDescription,
           progress: form.progress,
         });
-        setWorkLogs((prev) => prev.map((l) => (l.id === updated.id ? updated : l)));
       } else {
-        const created = await workLogsApi.create({
+        await workLogsApi.create({
           ...form,
           projectId: form.projectId || null,
         });
-        setWorkLogs((prev) => [...prev, created]);
       }
       setShowModal(false);
+      await load();
     } catch (err) {
       setError(err.message);
       if (err.message.includes("onboarding")) {
@@ -267,7 +254,7 @@ export default function DailyWork() {
     try {
       setError("");
       await workLogsApi.remove(row.sourceId);
-      setWorkLogs((prev) => prev.filter((l) => l.id !== row.sourceId));
+      await load();
     } catch (err) {
       setError(err.message);
     }

@@ -2,6 +2,7 @@ const express = require("express");
 const { authenticate } = require("../middleware/auth");
 const { readData, writeData, dataPath, nextId } = require("../utils/jsonStore");
 const { canLogWork, tryAutoCompleteStep } = require("../utils/projectOnboarding");
+const { upsertWorkLogRow, deleteWorkLogRow } = require("../utils/dailyWorkSql");
 
 const router = express.Router();
 const FILE = dataPath("work_logs.json");
@@ -44,7 +45,7 @@ router.get("/", (req, res) => {
   return res.status(403).json({ error: "Access denied" });
 });
 
-router.post("/", (req, res) => {
+router.post("/", async (req, res) => {
   if (!LOG_CREATORS.has(req.user.role)) {
     return res.status(403).json({ error: "Access denied" });
   }
@@ -114,6 +115,7 @@ router.post("/", (req, res) => {
 
   logs.push(newLog);
   writeLogs(logs);
+  await upsertWorkLogRow(newLog);
 
   if (req.user.role === "employee" && req.user.employeeId && parsedProjectId) {
     tryAutoCompleteStep(req.user.employeeId, parsedProjectId, "first_work_log");
@@ -122,7 +124,7 @@ router.post("/", (req, res) => {
   res.status(201).json(newLog);
 });
 
-router.put("/:id", (req, res) => {
+router.put("/:id", async (req, res) => {
   const logs = readLogs();
   const index = logs.findIndex((l) => l.id === Number(req.params.id));
 
@@ -151,10 +153,11 @@ router.put("/:id", (req, res) => {
   };
 
   writeLogs(logs);
+  await upsertWorkLogRow(logs[index]);
   res.json(logs[index]);
 });
 
-router.delete("/:id", (req, res) => {
+router.delete("/:id", async (req, res) => {
   const logs = readLogs();
   const index = logs.findIndex((l) => l.id === Number(req.params.id));
 
@@ -172,6 +175,7 @@ router.delete("/:id", (req, res) => {
 
   const deleted = logs.splice(index, 1)[0];
   writeLogs(logs);
+  await deleteWorkLogRow(deleted.id);
   res.json(deleted);
 });
 

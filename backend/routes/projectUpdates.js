@@ -1,6 +1,7 @@
 const express = require("express");
 const { authenticate } = require("../middleware/auth");
 const { readData, writeData, dataPath, nextId } = require("../utils/jsonStore");
+const { upsertProjectUpdateRow, deleteProjectUpdateRow } = require("../utils/dailyWorkSql");
 
 const router = express.Router();
 const FILE = dataPath("project_updates.json");
@@ -72,7 +73,7 @@ router.get("/", (req, res) => {
   res.json(updates);
 });
 
-router.post("/", (req, res) => {
+router.post("/", async (req, res) => {
   const { projectId, date, type, content, taskStatus } = req.body;
 
   if (!projectId || !date || !type || !content?.trim()) {
@@ -116,10 +117,11 @@ router.post("/", (req, res) => {
 
   updates.push(created);
   writeUpdates(updates);
+  await upsertProjectUpdateRow(created);
   res.status(201).json(created);
 });
 
-router.put("/:id", (req, res) => {
+router.put("/:id", async (req, res) => {
   const updates = readUpdates();
   const index = updates.findIndex((u) => u.id === Number(req.params.id));
 
@@ -174,10 +176,11 @@ router.put("/:id", (req, res) => {
   };
 
   writeUpdates(updates);
+  await upsertProjectUpdateRow(updates[index]);
   res.json(updates[index]);
 });
 
-router.delete("/:id", (req, res) => {
+router.delete("/:id", async (req, res) => {
   const updates = readUpdates();
   const index = updates.findIndex((u) => u.id === Number(req.params.id));
 
@@ -198,6 +201,7 @@ router.delete("/:id", (req, res) => {
 
   const deleted = updates.splice(index, 1)[0];
   writeUpdates(updates);
+  await deleteProjectUpdateRow(deleted.id);
   res.json(deleted);
 });
 

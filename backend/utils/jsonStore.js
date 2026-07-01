@@ -131,7 +131,8 @@ async function initDatabase() {
       (file) =>
         file.endsWith(".json") &&
         file !== "leave_allocations.json" &&
-        file !== "work_logs.json"
+        file !== "work_logs.json" &&
+        file !== "project_updates.json"
     );
     for (const file of files) {
       const key = path.basename(file, ".json");
