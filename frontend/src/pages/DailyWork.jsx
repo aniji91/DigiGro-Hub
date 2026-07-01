@@ -174,7 +174,8 @@ export default function DailyWork() {
     } catch (err) {
       setError(err.message);
       if (err.message.includes("onboarding")) {
-        navigate("/my-projects");
+        const pending = projects.find((p) => p.onboardingRequired);
+        navigate(pending ? `/view-projects/${pending.id}` : "/view-projects");
       }
     }
   }
@@ -210,8 +211,13 @@ export default function DailyWork() {
       {!isTeamView && pendingOnboarding.length > 0 && (
         <div className="alert warning">
           Complete project onboarding before logging work on:{" "}
-          {pendingOnboarding.map((p) => p.name).join(", ")}.{" "}
-          <Link to="/my-projects">Go to My Projects →</Link>
+          {pendingOnboarding.map((p, index) => (
+            <span key={p.id}>
+              {index > 0 ? ", " : ""}
+              <Link to={`/view-projects/${p.id}`}>{p.name}</Link>
+            </span>
+          ))}
+          .
         </div>
       )}
       {error && <div className="alert error">{error}</div>}

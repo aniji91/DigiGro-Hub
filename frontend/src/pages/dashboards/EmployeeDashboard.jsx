@@ -48,7 +48,7 @@ export default function EmployeeDashboard() {
               </li>
             ))}
           </ul>
-          <Link to="/my-projects" className="panel-link">View all projects →</Link>
+          <Link to="/view-projects" className="panel-link">View all projects →</Link>
         </div>
         <div className="panel">
           <h3>Project Onboarding</h3>
@@ -67,7 +67,7 @@ export default function EmployeeDashboard() {
               <li><span className="muted">All project onboarding complete</span></li>
             )}
           </ul>
-          <Link to="/my-projects" className="panel-link">Complete onboarding →</Link>
+          <Link to="/view-projects" className="panel-link">Complete onboarding →</Link>
         </div>
         <div className="panel">
           <h3>Recent Work Updates</h3>

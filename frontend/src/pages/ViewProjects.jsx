@@ -8,6 +8,7 @@ import { PROJECT_TYPE_LABELS } from "../config/projectConfig";
 import { ProjectBriefDetails } from "../components/ProjectBriefDetails";
 import { ProjectEnvironmentDetails } from "../components/ProjectEnvironmentDetails";
 import { ProjectExternalCrmDetails } from "../components/ProjectExternalCrmDetails";
+import ProjectOnboardingPanel from "../components/ProjectOnboardingPanel";
 
 const today = () => new Date().toISOString().slice(0, 10);
 
@@ -115,6 +116,16 @@ export default function ViewProjects() {
 
   function handleProjectSaved(updated) {
     setProjects((prev) => prev.map((p) => (p.id === updated.id ? { ...p, ...updated } : p)));
+  }
+
+  function handleOnboardingUpdate(updated) {
+    setProjects((prev) =>
+      prev.map((p) =>
+        p.id === updated.projectId
+          ? { ...p, onboarding: updated, onboardingRequired: updated.status !== "completed" }
+          : p
+      )
+    );
   }
 
   async function loadProjects() {
@@ -286,6 +297,9 @@ export default function ViewProjects() {
                       {project.status}
                     </span>
                   </div>
+                  {user?.role === "employee" && project.onboardingRequired && (
+                    <span className="badge status-pending">Onboarding required</span>
+                  )}
                   <span className="project-view-list-client">{project.clientName}</span>
                   <span className="project-view-grid-meta">
                     <Calendar size={14} />
@@ -311,10 +325,7 @@ export default function ViewProjects() {
                     >
                       <LayoutGrid size={16} /> All projects
                     </button>
-                    <Link
-                      to={user?.role === "employee" ? "/my-projects" : "/projects"}
-                      className="project-view-back"
-                    >
+                    <Link to="/projects" className="project-view-back">
                       <ArrowLeft size={16} /> Back to projects
                     </Link>
                   </div>
@@ -373,6 +384,14 @@ export default function ViewProjects() {
                 )}
               </div>
             </header>
+
+            {user?.role === "employee" && selectedProject.onboarding && (
+              <ProjectOnboardingPanel
+                onboarding={selectedProject.onboarding}
+                project={selectedProject}
+                onUpdate={handleOnboardingUpdate}
+              />
+            )}
 
             <div className="project-view-body">
               <aside className="project-view-side">

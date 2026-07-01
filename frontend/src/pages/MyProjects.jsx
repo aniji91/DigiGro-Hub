@@ -79,7 +79,7 @@ export default function MyProjects() {
         <DataTable
           columns={columns}
           rows={projects}
-          onView={(row) => navigate(`/view-projects/${row.id}`)}
+          onView={(row) => setViewing(row)}
           canView
           canEdit={false}
           canDelete={false}

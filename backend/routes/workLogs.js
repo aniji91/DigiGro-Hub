@@ -64,7 +64,7 @@ router.post("/", (req, res) => {
 
     if (!canLogWork(req.user.employeeId, parsedProjectId)) {
       return res.status(403).json({
-        error: "Complete project onboarding before logging work. Go to My Projects to finish required steps.",
+        error: "Complete project onboarding before logging work. Open View Projects to finish required steps.",
         code: "ONBOARDING_REQUIRED",
       });
     }
