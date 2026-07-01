@@ -1,4 +1,4 @@
-import { NavLink, useLocation } from "react-router-dom";
+import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { LogOut, PanelLeftClose, PanelLeft } from "lucide-react";
 import { useChatNotifications } from "../context/ChatNotificationContext";
 import AppLogo from "./AppLogo";
@@ -6,6 +6,7 @@ import AppLogo from "./AppLogo";
 export default function Sidebar({ menuItems, user, roleLabel, roleColor, onLogout, collapsed, onToggle }) {
   const { totalUnread } = useChatNotifications();
   const location = useLocation();
+  const navigate = useNavigate();
 
   return (
     <aside className={`crm-sidebar ${collapsed ? "crm-sidebar--collapsed" : ""}`}>
@@ -47,7 +48,12 @@ export default function Sidebar({ menuItems, user, roleLabel, roleColor, onLogou
       </nav>
 
       <div className="sidebar-footer">
-        <div className="user-chip" title={collapsed ? user.name : undefined}>
+        <button
+          type="button"
+          className="user-chip user-chip--clickable"
+          title={collapsed ? user.name : "My profile"}
+          onClick={() => navigate("/profile")}
+        >
           <div className="user-avatar" style={{ background: roleColor }}>
             {user.name.charAt(0)}
           </div>
@@ -55,7 +61,7 @@ export default function Sidebar({ menuItems, user, roleLabel, roleColor, onLogou
             <strong>{user.name}</strong>
             <span>{roleLabel}</span>
           </div>
-        </div>
+        </button>
         <button type="button" className="logout-btn" onClick={onLogout} title={collapsed ? "Logout" : undefined}>
           <LogOut size={16} />
           <span>Logout</span>

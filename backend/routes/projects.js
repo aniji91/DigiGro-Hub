@@ -38,9 +38,9 @@ router.get("/:id", (req, res) => {
 });
 
 router.post("/", authorize(...CREATE_ROLES), (req, res) => {
-  const { name, clientName, status, startDate } = req.body;
-  if (!name || !clientName || !status || !startDate) {
-    return res.status(400).json({ error: "Name, client, status, and start date are required" });
+  const { name, status, startDate } = req.body;
+  if (!name || !status || !startDate) {
+    return res.status(400).json({ error: "Name, status, and start date are required" });
   }
 
   const projects = readProjects();

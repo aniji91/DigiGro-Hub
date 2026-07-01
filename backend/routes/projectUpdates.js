@@ -97,6 +97,7 @@ router.post("/", (req, res) => {
   }
 
   const updates = readUpdates();
+  const now = new Date().toISOString();
   const created = {
     id: nextId(updates),
     projectId: parsedProjectId,
@@ -105,10 +106,11 @@ router.post("/", (req, res) => {
     type,
     content: content.trim(),
     taskStatus: type === "status" ? taskStatus : null,
+    statusUpdatedAt: type === "status" ? now : null,
     authorId: req.user.id,
     authorName: req.user.name,
     authorRole: req.user.role,
-    createdAt: new Date().toISOString(),
+    createdAt: now,
   };
 
   updates.push(created);
@@ -149,13 +151,25 @@ router.put("/:id", (req, res) => {
     return res.status(400).json({ error: "Task status is required for daily tasks" });
   }
 
+  const nextTaskStatus =
+    nextType === "status" ? (taskStatus ?? item.taskStatus ?? "New") : null;
+  const statusChanged =
+    nextType === "status" && taskStatus !== undefined && taskStatus !== item.taskStatus;
+  const now = new Date().toISOString();
+
   updates[index] = {
     ...item,
     date: date ?? item.date,
     type: nextType,
     content: content !== undefined ? content.trim() : item.content,
-    taskStatus: nextType === "status" ? (taskStatus ?? item.taskStatus ?? "New") : null,
-    updatedAt: new Date().toISOString(),
+    taskStatus: nextTaskStatus,
+    statusUpdatedAt:
+      nextType === "status"
+        ? statusChanged
+          ? now
+          : item.statusUpdatedAt || item.createdAt
+        : null,
+    updatedAt: now,
   };
 
   writeUpdates(updates);

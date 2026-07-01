@@ -44,6 +44,38 @@ function formatFullDate(dateStr) {
   });
 }
 
+function formatDateTime(iso) {
+  if (!iso) return "";
+  return new Date(iso).toLocaleString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  });
+}
+
+function getStatusUpdatedAt(task) {
+  return task.statusUpdatedAt || task.createdAt;
+}
+
+function TaskStatusSelect({ task, onChange, disabled }) {
+  return (
+    <select
+      className={`pm-task-status-select task-status--${taskStatusClass(task.taskStatus)}`}
+      value={task.taskStatus}
+      onChange={(e) => onChange(task, e.target.value)}
+      disabled={disabled}
+      title="Update task status"
+      aria-label={`Task status: ${task.content}`}
+    >
+      {TASK_STATUS_OPTIONS.map((opt) => (
+        <option key={opt} value={opt}>{opt}</option>
+      ))}
+    </select>
+  );
+}
+
 function initials(name = "") {
   return name
     .split(" ")
@@ -76,6 +108,7 @@ export default function PmProjectBoard() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [savingOwnerId, setSavingOwnerId] = useState(null);
+  const [updatingTaskId, setUpdatingTaskId] = useState(null);
 
   const statusDays = useMemo(() => getLastNDays(STATUS_DAYS), []);
   const employeeById = Object.fromEntries(employees.map((e) => [e.id, e]));
@@ -221,6 +254,21 @@ export default function PmProjectBoard() {
     }
   }
 
+  async function handleTaskStatusUpdate(task, nextStatus) {
+    if (task.taskStatus === nextStatus) return;
+
+    try {
+      setUpdatingTaskId(task.id);
+      setError("");
+      const updated = await projectUpdatesApi.update(task.id, { taskStatus: nextStatus });
+      setUpdates((prev) => prev.map((u) => (u.id === updated.id ? updated : u)));
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setUpdatingTaskId(null);
+    }
+  }
+
   async function handleAddTask(e, project) {
     e.preventDefault();
     const form = getTaskForm(project.id);
@@ -309,7 +357,10 @@ export default function PmProjectBoard() {
               <ListTodo size={18} />
               <div>
                 <strong>Add daily task</strong>
-                <span>{addingProject.name} · {addingProject.clientName}</span>
+                <span>
+                  {addingProject.name}
+                  {addingProject.clientName ? ` · ${addingProject.clientName}` : ""}
+                </span>
               </div>
             </div>
             <button
@@ -402,7 +453,9 @@ export default function PmProjectBoard() {
                     <tr className={isExpanded ? "pm-row-active" : ""}>
                       <td className="pm-col-project">
                         <strong>{project.name}</strong>
-                        <span className="pm-board-client">{project.clientName}</span>
+                        {project.clientName ? (
+                          <span className="pm-board-client">{project.clientName}</span>
+                        ) : null}
                       </td>
                       <td className="pm-col-owner">
                         <label className="pm-owner-select">
@@ -458,10 +511,15 @@ export default function PmProjectBoard() {
                               <ul className="pm-day-tasks">
                                 {tasks.map((task) => (
                                   <li key={task.id} className="pm-day-task">
-                                    <span className={`badge task-status task-status--${taskStatusClass(task.taskStatus)}`}>
-                                      {task.taskStatus}
-                                    </span>
+                                    <TaskStatusSelect
+                                      task={task}
+                                      onChange={handleTaskStatusUpdate}
+                                      disabled={updatingTaskId === task.id}
+                                    />
                                     <p>{task.content}</p>
+                                    <span className="pm-task-status-time">
+                                      Status updated {formatDateTime(getStatusUpdatedAt(task))}
+                                    </span>
                                   </li>
                                 ))}
                               </ul>
@@ -515,15 +573,19 @@ export default function PmProjectBoard() {
                                     <ul>
                                       {items.map((item) => (
                                         <li key={item.id}>
-                                          <span className={`badge task-status task-status--${taskStatusClass(item.taskStatus)}`}>
-                                            {item.taskStatus}
-                                          </span>
+                                          <TaskStatusSelect
+                                            task={item}
+                                            onChange={handleTaskStatusUpdate}
+                                            disabled={updatingTaskId === item.id}
+                                          />
                                           <p>{item.content}</p>
                                           <span className="celebration-meta">
-                                            {item.authorName} · {new Date(item.createdAt).toLocaleTimeString("en-US", {
+                                            {item.authorName} · added{" "}
+                                            {new Date(item.createdAt).toLocaleTimeString("en-US", {
                                               hour: "numeric",
                                               minute: "2-digit",
                                             })}
+                                            {" · "}status updated {formatDateTime(getStatusUpdatedAt(item))}
                                           </span>
                                         </li>
                                       ))}

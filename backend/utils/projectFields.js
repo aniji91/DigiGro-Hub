@@ -87,8 +87,13 @@ function normalizeProject(body, existing = {}) {
 
   return {
     name: body.name ?? existing.name,
-    clientName: body.clientName ?? existing.clientName,
-    clientId: body.clientId !== undefined ? Number(body.clientId) || existing.clientId : existing.clientId,
+    clientName: body.clientName !== undefined ? (body.clientName || "") : (existing.clientName || ""),
+    clientId:
+      body.clientId !== undefined
+        ? body.clientId === null || body.clientId === ""
+          ? null
+          : Number(body.clientId) || null
+        : existing.clientId ?? null,
     description: body.description !== undefined ? body.description : existing.description || "",
     status: body.status ?? existing.status,
     startDate: body.startDate ?? existing.startDate,

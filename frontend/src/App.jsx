@@ -14,6 +14,7 @@ import TeamChat from "./pages/TeamChat";
 import Users from "./pages/Users";
 import Roles from "./pages/Roles";
 import Settings from "./pages/Settings";
+import Profile from "./pages/Profile";
 import Announcements from "./pages/Announcements";
 import ViewProjects from "./pages/ViewProjects";
 import PmProjectBoard from "./pages/PmProjectBoard";
@@ -74,6 +75,7 @@ function App() {
             <Route path="chat" element={<ModuleRoute module="chat"><TeamChat /></ModuleRoute>} />
             <Route path="users" element={<ModuleRoute module="users"><Users /></ModuleRoute>} />
             <Route path="roles" element={<ModuleRoute module="roles"><Roles /></ModuleRoute>} />
+            <Route path="profile" element={<Profile />} />
             <Route path="settings" element={<ModuleRoute module="settings"><Settings /></ModuleRoute>} />
           </Route>
           <Route path="*" element={<Navigate to="/login" replace />} />

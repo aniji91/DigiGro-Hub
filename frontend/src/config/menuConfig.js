@@ -12,6 +12,7 @@ import {
   Shield,
   Megaphone,
   LayoutList,
+  CircleUser,
 } from "lucide-react";
 
 export const MENU_ITEMS = [
@@ -128,6 +129,13 @@ export const MENU_ITEMS = [
     icon: Shield,
     roles: ["superadmin", "admin"],
     module: "roles",
+  },
+  {
+    key: "profile",
+    label: "My Profile",
+    path: "/profile",
+    icon: CircleUser,
+    roles: ["superadmin", "admin", "hr", "product_manager", "employee"],
   },
   {
     key: "settings",

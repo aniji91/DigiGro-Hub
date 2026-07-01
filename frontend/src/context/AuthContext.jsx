@@ -54,6 +54,15 @@ export function AuthProvider({ children }) {
     setModulePermissions(null);
   }
 
+  function updateUser(partial) {
+    setUser((prev) => {
+      if (!prev) return prev;
+      const next = { ...prev, ...partial };
+      localStorage.setItem("user", JSON.stringify(next));
+      return next;
+    });
+  }
+
   const permissions = useMemo(() => {
     if (!user) return {};
     const role = user.role;
@@ -79,6 +88,7 @@ export function AuthProvider({ children }) {
     permissions,
     loginSuccess,
     logout,
+    updateUser,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

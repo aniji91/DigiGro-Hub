@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { ROLE_COLORS } from "../config/menuConfig";
 import { APP_NAME, APP_VERSION } from "../config/branding";
@@ -18,6 +19,9 @@ export default function Settings() {
             <li><span>Username</span><strong>@{user.username}</strong></li>
             <li><span>Role</span><strong style={{ color: ROLE_COLORS[user.role] }}>{roleLabel}</strong></li>
           </ul>
+          <p className="muted" style={{ marginTop: "1rem" }}>
+            <Link to="/profile">Open My Profile</Link> to update your name, username, or password.
+          </p>
         </div>
         <div className="panel">
           <h3>System</h3>
@@ -29,7 +33,10 @@ export default function Settings() {
         </div>
         <div className="panel">
           <h3>Security</h3>
-          <p className="muted">JWT-based authentication with role-based access control. Contact your Super Admin to manage user accounts.</p>
+          <p className="muted">
+            JWT-based authentication with role-based access control. Users can change their own
+            password from <Link to="/profile">My Profile</Link>.
+          </p>
         </div>
       </div>
     </>

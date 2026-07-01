@@ -47,7 +47,12 @@ export default function TopBar({ user, roleLabel, roleColor }) {
             </span>
           )}
         </button>
-        <div className="topbar-user">
+        <button
+          type="button"
+          className="topbar-user"
+          onClick={() => navigate("/profile")}
+          title="My profile"
+        >
           <div>
             <strong>{user.name}</strong>
             <span style={{ color: roleColor }}>{roleLabel}</span>
@@ -55,7 +60,7 @@ export default function TopBar({ user, roleLabel, roleColor }) {
           <div className="user-avatar sm" style={{ background: roleColor }}>
             {user.name.charAt(0)}
           </div>
-        </div>
+        </button>
       </div>
     </header>
   );

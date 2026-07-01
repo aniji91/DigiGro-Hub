@@ -224,15 +224,12 @@ export default function Projects() {
 
   async function handleSubmit(e) {
     e.preventDefault();
-    if (!form.clientName) {
-      setError("Please select a client");
-      return;
-    }
     try {
       setError("");
       const payload = {
         ...form,
-        clientId: form.clientId ? Number(form.clientId) : undefined,
+        clientName: form.clientName || "",
+        clientId: form.clientId ? Number(form.clientId) : null,
         assignedEmployeeIds: form.assignedEmployeeIds.map(Number),
         ownerId: form.ownerId ? Number(form.ownerId) : null,
         referenceSites: form.referenceSites.filter((s) => s.url.trim()),
@@ -357,8 +354,8 @@ export default function Projects() {
                     <input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required />
                   </label>
                   <label>
-                    Client
-                    <select value={form.clientId} onChange={handleClientChange} required>
+                    Client <span className="field-optional">(optional)</span>
+                    <select value={form.clientId} onChange={handleClientChange}>
                       <option value="">Select a client</option>
                       {clients.map((client) => (
                         <option key={client.id} value={client.id}>
