@@ -52,7 +52,7 @@ export default function DailyWork() {
     { key: "date", label: "Date" },
     projectColumn,
     { key: "hoursWorked", label: "Hours", render: (v) => `${v}h` },
-    { key: "workDescription", label: "Work Done" },
+    { key: "workDescription", label: "Task" },
     { key: "progress", label: "Progress", render: (v) => <span className="badge">{v}</span> },
   ];
 
@@ -61,7 +61,7 @@ export default function DailyWork() {
     { key: "employeeName", label: "Employee" },
     projectColumn,
     { key: "hoursWorked", label: "Hours", render: (v) => `${v}h` },
-    { key: "workDescription", label: "Work Done" },
+    { key: "workDescription", label: "Task" },
     { key: "progress", label: "Progress", render: (v) => <span className="badge">{v}</span> },
   ];
 
@@ -179,6 +179,17 @@ export default function DailyWork() {
     }
   }
 
+  async function handleDelete(id) {
+    if (!window.confirm("Delete this work log?")) return;
+    try {
+      setError("");
+      await workLogsApi.remove(id);
+      setLogs((prev) => prev.filter((l) => l.id !== id));
+    } catch (err) {
+      setError(err.message);
+    }
+  }
+
   const pendingOnboarding = projects.filter((p) => p.onboardingRequired);
 
   const subtitle = isTeamView
@@ -255,9 +266,11 @@ export default function DailyWork() {
           columns={columns}
           rows={displayedLogs}
           onEdit={openEdit}
+          onDelete={handleDelete}
           canEdit={perms.edit}
           canEditRow={isTeamView ? (row) => isOwnLog(row, user) : undefined}
-          canDelete={false}
+          canDelete={isTeamView || perms.delete}
+          canDeleteRow={(row) => isTeamView || perms.delete || isOwnLog(row, user)}
         />
       )}
 
@@ -307,12 +320,12 @@ export default function DailyWork() {
                 />
               </label>
               <label>
-                Work Description
+                Task
                 <textarea
                   rows={4}
                   value={form.workDescription}
                   onChange={(e) => setForm({ ...form, workDescription: e.target.value })}
-                  placeholder="What did you accomplish today?"
+                  placeholder="What task did you work on today?"
                   required
                 />
               </label>

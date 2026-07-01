@@ -1,6 +1,6 @@
 import { Eye, Pencil, Trash2 } from "lucide-react";
 
-export default function DataTable({ columns, rows, onView, onEdit, onDelete, canView, canEdit, canDelete, canEditRow }) {
+export default function DataTable({ columns, rows, onView, onEdit, onDelete, canView, canEdit, canDelete, canEditRow, canDeleteRow }) {
   if (rows.length === 0) {
     return <div className="empty-state">No records found. Add your first entry to get started.</div>;
   }
@@ -39,7 +39,7 @@ export default function DataTable({ columns, rows, onView, onEdit, onDelete, can
                         <Pencil size={15} />
                       </button>
                     )}
-                    {canDelete && onDelete && (
+                    {canDelete && onDelete && (!canDeleteRow || canDeleteRow(row)) && (
                       <button type="button" className="icon-action delete" onClick={() => onDelete(row.id)} title="Delete">
                         <Trash2 size={15} />
                       </button>

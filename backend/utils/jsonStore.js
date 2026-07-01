@@ -85,6 +85,21 @@ async function restoreProjectsFromTableIfNeeded() {
   console.log(`Restored ${restored.length} project(s) from projects table into app_collections`);
 }
 
+async function runDataMigrations() {
+  if (!isMysqlEnabled()) return;
+
+  const migrations = cache.get("_migrations") || {};
+
+  if (!migrations.cleared_demo_work_logs_v1) {
+    cache.set("work_logs", []);
+    await persistCollection("work_logs", []);
+    migrations.cleared_demo_work_logs_v1 = new Date().toISOString();
+    cache.set("_migrations", migrations);
+    await persistCollection("_migrations", migrations);
+    console.log("Migration: cleared demo work logs from app_collections");
+  }
+}
+
 async function initDatabase() {
   if (!isMysqlEnabled() || initialized) return;
 
@@ -113,7 +128,10 @@ async function initDatabase() {
   const dataDir = path.join(__dirname, "..", "data");
   if (fs.existsSync(dataDir)) {
     const files = fs.readdirSync(dataDir).filter(
-      (file) => file.endsWith(".json") && file !== "leave_allocations.json"
+      (file) =>
+        file.endsWith(".json") &&
+        file !== "leave_allocations.json" &&
+        file !== "work_logs.json"
     );
     for (const file of files) {
       const key = path.basename(file, ".json");
@@ -125,6 +143,7 @@ async function initDatabase() {
   }
 
   await restoreProjectsFromTableIfNeeded();
+  await runDataMigrations();
   initialized = true;
   await syncProjectOwnersFromSeed();
   await syncSystemRolePermissionsFromSeed();

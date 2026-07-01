@@ -58,6 +58,7 @@ app.get("/api/health", (req, res) => {
     mysql: isMysqlEnabled(),
     dbReady: isDatabaseReady(),
     projects: getCollectionCount("projects"),
+    workLogs: getCollectionCount("work_logs"),
     frontend: Boolean(FRONTEND_DIST),
     port: PORT,
   });

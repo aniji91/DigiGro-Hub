@@ -1,6 +1,5 @@
 const express = require("express");
 const { authenticate } = require("../middleware/auth");
-const authorize = require("../middleware/authorize");
 const { readData, writeData, dataPath, nextId } = require("../utils/jsonStore");
 const { canLogWork, tryAutoCompleteStep } = require("../utils/projectOnboarding");
 
@@ -53,7 +52,7 @@ router.post("/", (req, res) => {
   const { projectId, date, hoursWorked, workDescription, progress } = req.body;
 
   if (!date || !hoursWorked || !workDescription) {
-    return res.status(400).json({ error: "Date, hours, and work description are required" });
+    return res.status(400).json({ error: "Date, hours, and task are required" });
   }
 
   const parsedProjectId = projectId ? Number(projectId) : null;
@@ -155,12 +154,20 @@ router.put("/:id", (req, res) => {
   res.json(logs[index]);
 });
 
-router.delete("/:id", authorize("superadmin", "admin"), (req, res) => {
+router.delete("/:id", (req, res) => {
   const logs = readLogs();
   const index = logs.findIndex((l) => l.id === Number(req.params.id));
 
   if (index === -1) {
     return res.status(404).json({ error: "Work log not found" });
+  }
+
+  const log = logs[index];
+  const canManageTeam = ["superadmin", "admin", "product_manager", "hr"].includes(req.user.role);
+  const isAuthor = isLogAuthor(log, req.user);
+
+  if (!canManageTeam && !isAuthor) {
+    return res.status(403).json({ error: "Access denied" });
   }
 
   const deleted = logs.splice(index, 1)[0];
