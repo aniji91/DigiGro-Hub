@@ -6,6 +6,13 @@ function toIsoDate(value) {
   return String(value).slice(0, 10);
 }
 
+function toMysqlDatetime(value) {
+  if (!value) return null;
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return null;
+  return date.toISOString().slice(0, 19).replace("T", " ");
+}
+
 function mapWorkLogRow(row) {
   return {
     id: row.id,
@@ -54,7 +61,12 @@ function getAccessibleProjectIds(user) {
 }
 
 async function upsertWorkLogRow(item) {
-  if (!isMysqlEnabled() || !item) return;
+  if (!isMysqlEnabled() || !item?.id) return;
+
+  const logDate = toIsoDate(item.date);
+  const workDescription = item.workDescription != null ? String(item.workDescription) : "";
+  if (!logDate || !workDescription) return;
+
   const pool = getPool();
   await pool.query(
     `INSERT INTO work_logs
@@ -81,12 +93,12 @@ async function upsertWorkLogRow(item) {
       item.role || null,
       item.projectId || null,
       item.projectName || null,
-      toIsoDate(item.date),
-      item.hoursWorked,
-      item.workDescription,
+      logDate,
+      Number(item.hoursWorked ?? 0),
+      workDescription,
       item.progress || null,
-      item.createdAt || null,
-      item.updatedAt || null,
+      toMysqlDatetime(item.createdAt),
+      toMysqlDatetime(item.updatedAt),
     ]
   );
 }
@@ -97,7 +109,13 @@ async function deleteWorkLogRow(id) {
 }
 
 async function upsertProjectUpdateRow(item) {
-  if (!isMysqlEnabled() || !item) return;
+  if (!isMysqlEnabled() || !item?.id || !item?.projectId) return;
+
+  const updateDate = toIsoDate(item.date);
+  const content = item.content != null ? String(item.content).trim() : "";
+  const updateType = item.type ? String(item.type) : "";
+  if (!updateDate || !content || !updateType) return;
+
   const pool = getPool();
   await pool.query(
     `INSERT INTO project_updates
@@ -119,15 +137,15 @@ async function upsertProjectUpdateRow(item) {
       item.id,
       item.projectId,
       item.projectName || null,
-      toIsoDate(item.date),
-      item.type,
-      item.content,
+      updateDate,
+      updateType,
+      content,
       item.taskStatus || null,
       item.authorId || null,
       item.authorName || null,
       item.authorRole || null,
-      item.createdAt || null,
-      item.updatedAt || null,
+      toMysqlDatetime(item.createdAt),
+      toMysqlDatetime(item.updatedAt),
     ]
   );
 }
@@ -142,21 +160,38 @@ async function syncDailyWorkCollectionsToSql() {
 
   const workLogs = readData(dataPath("work_logs.json"));
   const updates = readData(dataPath("project_updates.json"));
+  let syncedLogs = 0;
+  let syncedUpdates = 0;
+  let skipped = 0;
 
   if (Array.isArray(workLogs)) {
     for (const item of workLogs) {
-      await upsertWorkLogRow(item);
+      try {
+        await upsertWorkLogRow(item);
+        syncedLogs += 1;
+      } catch (err) {
+        skipped += 1;
+        console.warn(`Skipped work log ${item?.id}: ${err.message}`);
+      }
     }
   }
 
   if (Array.isArray(updates)) {
     for (const item of updates) {
-      await upsertProjectUpdateRow(item);
+      try {
+        await upsertProjectUpdateRow(item);
+        syncedUpdates += 1;
+      } catch (err) {
+        skipped += 1;
+        console.warn(`Skipped project update ${item?.id}: ${err.message}`);
+      }
     }
   }
 
   console.log(
-    `Synced daily work tables: ${workLogs?.length || 0} work log(s), ${updates?.length || 0} project update(s)`
+    `Synced daily work tables: ${syncedLogs} work log(s), ${syncedUpdates} project update(s)${
+      skipped ? `, ${skipped} skipped` : ""
+    }`
   );
 }
 
@@ -284,8 +319,12 @@ function loadDailyWorkFromCollections(user, filters = {}) {
 }
 
 async function loadDailyWork(user, filters = {}) {
-  const fromSql = await loadDailyWorkFromSql(user, filters);
-  if (fromSql) return fromSql;
+  try {
+    const fromSql = await loadDailyWorkFromSql(user, filters);
+    if (fromSql) return fromSql;
+  } catch (err) {
+    console.warn("Daily work SQL read failed, using collections:", err.message);
+  }
   return loadDailyWorkFromCollections(user, filters);
 }
 

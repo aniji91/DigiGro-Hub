@@ -117,7 +117,11 @@ router.post("/", async (req, res) => {
 
   updates.push(created);
   writeUpdates(updates);
-  await upsertProjectUpdateRow(created);
+  try {
+    await upsertProjectUpdateRow(created);
+  } catch (err) {
+    console.warn(`Project update ${created.id} saved but SQL sync failed:`, err.message);
+  }
   res.status(201).json(created);
 });
 
@@ -176,7 +180,11 @@ router.put("/:id", async (req, res) => {
   };
 
   writeUpdates(updates);
-  await upsertProjectUpdateRow(updates[index]);
+  try {
+    await upsertProjectUpdateRow(updates[index]);
+  } catch (err) {
+    console.warn(`Project update ${updates[index].id} saved but SQL sync failed:`, err.message);
+  }
   res.json(updates[index]);
 });
 
@@ -201,7 +209,11 @@ router.delete("/:id", async (req, res) => {
 
   const deleted = updates.splice(index, 1)[0];
   writeUpdates(updates);
-  await deleteProjectUpdateRow(deleted.id);
+  try {
+    await deleteProjectUpdateRow(deleted.id);
+  } catch (err) {
+    console.warn(`Project update ${deleted.id} deleted but SQL sync failed:`, err.message);
+  }
   res.json(deleted);
 });
 

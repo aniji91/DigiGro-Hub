@@ -119,7 +119,11 @@ async function bootstrapData() {
     try {
       await testConnection();
       await initDatabase();
-      await syncDailyWorkCollectionsToSql();
+      try {
+        await syncDailyWorkCollectionsToSql();
+      } catch (err) {
+        console.warn("Daily work SQL sync failed (server will still start):", err.message);
+      }
       const migrated = await initLeaveAllocations();
       if (migrated > 0) {
         console.log(`Migrated ${migrated} leave allocation(s) to leave_allocations table`);

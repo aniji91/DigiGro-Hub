@@ -115,7 +115,11 @@ router.post("/", async (req, res) => {
 
   logs.push(newLog);
   writeLogs(logs);
-  await upsertWorkLogRow(newLog);
+  try {
+    await upsertWorkLogRow(newLog);
+  } catch (err) {
+    console.warn(`Work log ${newLog.id} saved but SQL sync failed:`, err.message);
+  }
 
   if (req.user.role === "employee" && req.user.employeeId && parsedProjectId) {
     tryAutoCompleteStep(req.user.employeeId, parsedProjectId, "first_work_log");
@@ -153,7 +157,11 @@ router.put("/:id", async (req, res) => {
   };
 
   writeLogs(logs);
-  await upsertWorkLogRow(logs[index]);
+  try {
+    await upsertWorkLogRow(logs[index]);
+  } catch (err) {
+    console.warn(`Work log ${logs[index].id} saved but SQL sync failed:`, err.message);
+  }
   res.json(logs[index]);
 });
 
@@ -175,7 +183,11 @@ router.delete("/:id", async (req, res) => {
 
   const deleted = logs.splice(index, 1)[0];
   writeLogs(logs);
-  await deleteWorkLogRow(deleted.id);
+  try {
+    await deleteWorkLogRow(deleted.id);
+  } catch (err) {
+    console.warn(`Work log ${deleted.id} deleted but SQL sync failed:`, err.message);
+  }
   res.json(deleted);
 });
 
