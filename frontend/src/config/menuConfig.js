@@ -49,7 +49,7 @@ export const MENU_ITEMS = [
     label: "Project Status Board",
     path: "/pm-board",
     icon: ClipboardList,
-    roles: ["superadmin", "admin", "product_manager", "employee"],
+    roles: ["superadmin", "admin", "product_manager"],
   },
   {
     key: "viewProjects",

@@ -17,6 +17,12 @@ function canUpdateEnvironment(user, project) {
   return (project.assignedEmployeeIds || []).includes(user.employeeId);
 }
 
+function canUpdateProject(user, project) {
+  if (UPDATE_ROLES.includes(user.role)) return true;
+  if (user.role !== "employee" || !user.employeeId) return false;
+  return (project.assignedEmployeeIds || []).includes(user.employeeId);
+}
+
 function readProjects() {
   return readData(FILE);
 }
@@ -56,10 +62,15 @@ router.post("/", authorize(...CREATE_ROLES), (req, res) => {
   res.status(201).json(newProject);
 });
 
-router.put("/:id", authorize(...UPDATE_ROLES), (req, res) => {
+router.put("/:id", (req, res) => {
   const projects = readProjects();
   const index = projects.findIndex((p) => p.id === Number(req.params.id));
   if (index === -1) return res.status(404).json({ error: "Not found" });
+
+  const project = projects[index];
+  if (!canUpdateProject(req.user, project)) {
+    return res.status(403).json({ error: "Not allowed to update this project" });
+  }
 
   projects[index] = {
     ...projects[index],

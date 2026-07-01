@@ -46,6 +46,17 @@ function ViewProjectsRoute() {
   );
 }
 
+function PmBoardRoute() {
+  const { permissions, user } = useAuth();
+  const allowed = Boolean(permissions.projects?.view) && user?.role !== "employee";
+
+  return (
+    <ProtectedRoute checkAccess={() => allowed}>
+      {allowed ? <PmProjectBoard /> : <Navigate to="/dashboard" replace />}
+    </ProtectedRoute>
+  );
+}
+
 function App() {
   return (
     <AuthProvider>
@@ -67,7 +78,7 @@ function App() {
             <Route path="projects" element={<ModuleRoute module="projects"><Projects /></ModuleRoute>} />
             <Route path="my-projects" element={<ViewProjectsRoute />} />
             <Route path="view-projects/:projectId?" element={<ViewProjectsRoute />} />
-            <Route path="pm-board" element={<ModuleRoute module="projects"><PmProjectBoard /></ModuleRoute>} />
+            <Route path="pm-board" element={<PmBoardRoute />} />
             <Route path="daily-work" element={<ModuleRoute module="workLogs"><DailyWork /></ModuleRoute>} />
             <Route path="leaves" element={<ModuleRoute module="leaves"><Leaves /></ModuleRoute>} />
             <Route path="holidays" element={<ModuleRoute module="holidays"><HolidayCalendar /></ModuleRoute>} />

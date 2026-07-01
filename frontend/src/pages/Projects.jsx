@@ -29,8 +29,14 @@ function readFileAsDataUrl(file) {
 
 export default function Projects() {
   const navigate = useNavigate();
-  const { permissions } = useAuth();
+  const { permissions, user } = useAuth();
   const perms = permissions.projects || {};
+  const isEmployee = user?.role === "employee";
+
+  function canEditProject(row) {
+    if (!isEmployee) return true;
+    return (row.assignedEmployeeIds || []).includes(user.employeeId);
+  }
 
   const [projects, setProjects] = useState([]);
   const [employees, setEmployees] = useState([]);
@@ -268,7 +274,7 @@ export default function Projects() {
         subtitle="Create website projects with briefs, references, and team assignments"
         actionLabel="New Project"
         onAction={openCreate}
-        showAction={perms.create}
+        showAction={perms.create && !isEmployee}
       />
       {error && <div className="alert error">{error}</div>}
       {loading ? (
@@ -282,6 +288,7 @@ export default function Projects() {
           onDelete={handleDelete}
           canView={perms.view}
           canEdit={perms.edit}
+          canEditRow={canEditProject}
           canDelete={perms.delete}
         />
       )}

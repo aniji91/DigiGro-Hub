@@ -100,7 +100,7 @@
       "hr"
     ],
     "modulePermissions": {
-      "projects": "read",
+      "projects": "cru",
       "myProjects": "read",
       "workLogs": "cru",
       "leaves": "cru",
