@@ -52,12 +52,38 @@ function getAccessibleProjectIds(user) {
   const projects = readData(dataPath("projects.json"));
   const readAll = ["superadmin", "admin", "product_manager", "hr"].includes(user.role);
   if (readAll) return projects.map((p) => p.id);
-  if (user.role === "employee" && user.employeeId) {
+  if (user.role === "employee" && user.employeeId != null) {
+    const employeeId = Number(user.employeeId);
     return projects
-      .filter((p) => (p.assignedEmployeeIds || []).includes(user.employeeId))
+      .filter((p) =>
+        (p.assignedEmployeeIds || []).some((id) => Number(id) === employeeId)
+      )
       .map((p) => p.id);
   }
   return [];
+}
+
+function sortProjectUpdates(updates) {
+  return [...updates].sort((a, b) => {
+    if (a.date !== b.date) return b.date.localeCompare(a.date);
+    return new Date(b.createdAt || 0) - new Date(a.createdAt || 0);
+  });
+}
+
+function sortWorkLogs(logs) {
+  return [...logs].sort((a, b) => b.date.localeCompare(a.date) || b.id - a.id);
+}
+
+function mergeById(primary, secondary) {
+  const seen = new Set(primary.map((item) => item.id));
+  const merged = [...primary];
+  for (const item of secondary) {
+    if (!seen.has(item.id)) {
+      merged.push(item);
+      seen.add(item.id);
+    }
+  }
+  return merged;
 }
 
 async function upsertWorkLogRow(item) {
@@ -155,6 +181,36 @@ async function deleteProjectUpdateRow(id) {
   await getPool().query("DELETE FROM project_updates WHERE id = ?", [Number(id)]);
 }
 
+async function ensureDailyWorkTablesSynced() {
+  if (!isMysqlEnabled()) return;
+
+  const pool = getPool();
+  const workLogs = readData(dataPath("work_logs.json"));
+  const updates = readData(dataPath("project_updates.json"));
+  const [[workLogCount]] = await pool.query("SELECT COUNT(*) AS count FROM work_logs");
+  const [[updateCount]] = await pool.query("SELECT COUNT(*) AS count FROM project_updates");
+
+  if (Array.isArray(workLogs) && workLogs.length > Number(workLogCount.count)) {
+    for (const item of workLogs) {
+      try {
+        await upsertWorkLogRow(item);
+      } catch (err) {
+        console.warn(`Lazy-sync work log ${item?.id} failed: ${err.message}`);
+      }
+    }
+  }
+
+  if (Array.isArray(updates) && updates.length > Number(updateCount.count)) {
+    for (const item of updates) {
+      try {
+        await upsertProjectUpdateRow(item);
+      } catch (err) {
+        console.warn(`Lazy-sync project update ${item?.id} failed: ${err.message}`);
+      }
+    }
+  }
+}
+
 async function syncDailyWorkCollectionsToSql() {
   if (!isMysqlEnabled()) return;
 
@@ -197,6 +253,8 @@ async function syncDailyWorkCollectionsToSql() {
 
 async function loadDailyWorkFromSql(user, filters = {}) {
   if (!isMysqlEnabled()) return null;
+
+  await ensureDailyWorkTablesSynced();
 
   const pool = getPool();
   const { projectId, date, employeeId } = filters;
@@ -319,13 +377,27 @@ function loadDailyWorkFromCollections(user, filters = {}) {
 }
 
 async function loadDailyWork(user, filters = {}) {
+  const fromCollections = loadDailyWorkFromCollections(user, filters);
+
+  if (!isMysqlEnabled()) return fromCollections;
+
   try {
     const fromSql = await loadDailyWorkFromSql(user, filters);
-    if (fromSql) return fromSql;
+    if (!fromSql) return fromCollections;
+
+    const workLogs = fromSql.workLogs.length > 0 ? fromSql.workLogs : fromCollections.workLogs;
+    const projectUpdates = sortProjectUpdates(
+      mergeById(fromSql.projectUpdates, fromCollections.projectUpdates)
+    );
+
+    return {
+      workLogs: sortWorkLogs(workLogs),
+      projectUpdates,
+    };
   } catch (err) {
     console.warn("Daily work SQL read failed, using collections:", err.message);
   }
-  return loadDailyWorkFromCollections(user, filters);
+  return fromCollections;
 }
 
 module.exports = {
