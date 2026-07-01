@@ -298,7 +298,7 @@ export default function Employees() {
                     />
                   </label>
                   <label>
-                    Salary <span className="optional-mark">(optional)</span>
+                    Salary
                     <input
                       type="number"
                       min="0"

@@ -394,7 +394,7 @@ export default function Projects() {
                     />
                   </label>
                   <label>
-                    End date <span className="optional-mark">(optional)</span>
+                    End date
                     <input
                       type="date"
                       value={form.endDate}
@@ -431,7 +431,7 @@ export default function Projects() {
                 <h4>Website creation brief</h4>
                 <div className="employee-form-grid">
                   <label className="full-width-field span-2">
-                    Existing website URL <span className="optional-mark">(if available)</span>
+                    Existing website URL
                     <input
                       type="url"
                       value={form.existingSiteUrl}

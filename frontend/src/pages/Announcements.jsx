@@ -243,7 +243,7 @@ export default function Announcements() {
                 />
               </label>
               <label>
-                Expires <span className="muted">(optional)</span>
+                Expires
                 <input
                   type="date"
                   value={form.expiresAt}

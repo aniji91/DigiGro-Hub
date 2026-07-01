@@ -75,7 +75,7 @@ export default function ChatComposeTools({
   function insertLink() {
     const url = window.prompt("Enter link URL");
     if (!url) return;
-    const label = window.prompt("Link text (optional)", url) || url;
+    const label = window.prompt("Link text", url) || url;
     insertText(`[${label}](${url})`);
   }
 

@@ -266,7 +266,7 @@ export default function DailyWork() {
           <form className="modal-form-layout" onSubmit={handleSubmit}>
             <div className="modal-form-fields">
               <label>
-                Project <span className="muted">(optional)</span>
+                Project
                 <select
                   value={form.projectId}
                   onChange={(e) => setForm({ ...form, projectId: e.target.value })}

@@ -1174,12 +1174,6 @@
   color: #9ca3af;
 }
 
-.field-optional {
-  font-size: 0.8rem;
-  font-weight: 400;
-  color: var(--text-muted);
-}
-
 @media (max-width: 1100px) {
   .project-view-body {
     grid-template-columns: 1fr;
@@ -2378,12 +2372,6 @@
 
 .required-mark {
   color: #dc2626;
-}
-
-.optional-mark {
-  color: #6b7280;
-  font-weight: 400;
-  font-size: 0.78rem;
 }
 
 .employee-form-section {
