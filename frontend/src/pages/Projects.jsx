@@ -354,7 +354,7 @@ export default function Projects() {
                     <input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required />
                   </label>
                   <label>
-                    Client <span className="field-optional">(optional)</span>
+                    Client
                     <select value={form.clientId} onChange={handleClientChange}>
                       <option value="">Select a client</option>
                       {clients.map((client) => (
