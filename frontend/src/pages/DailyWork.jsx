@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import { fetchMyProjects, projectsApi, workLogsApi } from "../api/crmApi";
+import { fetchMyProjects, fetchProjectUpdates, projectsApi, workLogsApi } from "../api/crmApi";
 import DataTable from "../components/DataTable";
 import Modal from "../components/Modal";
 import PageHeader from "../components/PageHeader";
@@ -18,10 +18,61 @@ const EMPTY = {
 
 const TEAM_ROLES = new Set(["hr", "product_manager", "admin", "superadmin"]);
 
+const ENTRY_LABELS = {
+  work_log: "Daily log",
+  task: "Task",
+  discussion: "Discussion",
+};
+
 function isOwnLog(log, user) {
   if (!log || !user) return false;
   if (log.userId != null) return log.userId === user.id;
   return user.employeeId != null && log.employeeId === user.employeeId;
+}
+
+function taskStatusClass(status = "") {
+  return status.toLowerCase().replace(/\s+/g, "-");
+}
+
+function normalizeFeed(workLogs, projectUpdates) {
+  const logItems = workLogs.map((log) => ({
+    id: `work-${log.id}`,
+    sourceId: log.id,
+    entryType: "work_log",
+    date: log.date,
+    projectId: log.projectId ?? null,
+    projectName: log.projectName || "",
+    employeeName: log.employeeName || "—",
+    userId: log.userId ?? null,
+    employeeId: log.employeeId ?? null,
+    content: log.workDescription,
+    hoursWorked: Number(log.hoursWorked || 0),
+    statusLabel: log.progress || "—",
+    authorName: log.employeeName || "—",
+    raw: log,
+  }));
+
+  const updateItems = projectUpdates.map((update) => ({
+    id: `update-${update.id}`,
+    sourceId: update.id,
+    entryType: update.type === "status" ? "task" : "discussion",
+    date: update.date,
+    projectId: update.projectId,
+    projectName: update.projectName || "",
+    employeeName: update.authorName || "—",
+    userId: update.authorId ?? null,
+    employeeId: null,
+    content: update.content,
+    hoursWorked: null,
+    statusLabel: update.type === "status" ? update.taskStatus || "New" : "Discussion",
+    authorName: update.authorName || "—",
+    raw: update,
+  }));
+
+  return [...logItems, ...updateItems].sort((a, b) => {
+    if (a.date !== b.date) return b.date.localeCompare(a.date);
+    return String(b.id).localeCompare(String(a.id));
+  });
 }
 
 export default function DailyWork() {
@@ -31,7 +82,8 @@ export default function DailyWork() {
   const location = useLocation();
   const navigate = useNavigate();
 
-  const [logs, setLogs] = useState([]);
+  const [workLogs, setWorkLogs] = useState([]);
+  const [projectUpdates, setProjectUpdates] = useState([]);
   const [projects, setProjects] = useState([]);
   const [form, setForm] = useState(EMPTY);
   const [editing, setEditing] = useState(null);
@@ -42,43 +94,106 @@ export default function DailyWork() {
   const [filterEmployee, setFilterEmployee] = useState("");
   const [filterDate, setFilterDate] = useState("");
 
-  const projectColumn = {
-    key: "projectName",
-    label: "Project",
-    render: (v) => v || <span className="muted">—</span>,
-  };
+  const feed = useMemo(
+    () => normalizeFeed(workLogs, projectUpdates),
+    [workLogs, projectUpdates]
+  );
 
-  const employeeColumns = [
-    { key: "date", label: "Date" },
-    projectColumn,
-    { key: "hoursWorked", label: "Hours", render: (v) => `${v}h` },
-    { key: "workDescription", label: "Task" },
-    { key: "progress", label: "Progress", render: (v) => <span className="badge">{v}</span> },
-  ];
+  const employeeOptions = useMemo(() => {
+    const map = new Map();
+    feed.forEach((item) => {
+      const key = item.userId ?? item.employeeId ?? item.employeeName;
+      if (key != null && !map.has(key)) {
+        map.set(key, item.employeeName);
+      }
+    });
+    return [...map.entries()]
+      .map(([id, name]) => ({ id, name }))
+      .sort((a, b) => a.name.localeCompare(b.name));
+  }, [feed]);
 
-  const teamColumns = [
-    { key: "date", label: "Date" },
-    { key: "employeeName", label: "Employee" },
-    projectColumn,
-    { key: "hoursWorked", label: "Hours", render: (v) => `${v}h` },
-    { key: "workDescription", label: "Task" },
-    { key: "progress", label: "Progress", render: (v) => <span className="badge">{v}</span> },
-  ];
+  const displayedItems = useMemo(() => {
+    return feed.filter((item) => {
+      if (filterProject) {
+        if (filterProject === "none") {
+          if (item.projectId != null) return false;
+        } else if (item.projectId !== Number(filterProject)) {
+          return false;
+        }
+      }
+      if (filterEmployee) {
+        const id = Number(filterEmployee);
+        if (item.userId !== id && item.employeeId !== id) return false;
+      }
+      if (filterDate && item.date !== filterDate) return false;
+      return true;
+    });
+  }, [feed, filterProject, filterEmployee, filterDate]);
 
-  const columns = isTeamView ? teamColumns : employeeColumns;
+  const totalHours = useMemo(
+    () =>
+      displayedItems
+        .filter((item) => item.entryType === "work_log")
+        .reduce((sum, item) => sum + Number(item.hoursWorked || 0), 0),
+    [displayedItems]
+  );
+
+  const entryCounts = useMemo(() => {
+    const counts = { work_log: 0, task: 0, discussion: 0 };
+    displayedItems.forEach((item) => {
+      counts[item.entryType] += 1;
+    });
+    return counts;
+  }, [displayedItems]);
+
+  const columns = useMemo(() => {
+    const base = [
+      { key: "date", label: "Date" },
+      ...(isTeamView ? [{ key: "employeeName", label: "Employee" }] : []),
+      {
+        key: "projectName",
+        label: "Project",
+        render: (v) => v || <span className="muted">—</span>,
+      },
+      {
+        key: "entryType",
+        label: "Type",
+        render: (v) => (
+          <span className={`badge point-type-${v === "discussion" ? "discussion" : v === "task" ? "status" : "work-log"}`}>
+            {ENTRY_LABELS[v] || v}
+          </span>
+        ),
+      },
+      { key: "content", label: "Task / Details" },
+      {
+        key: "hoursWorked",
+        label: "Hours",
+        render: (v, row) => (row.entryType === "work_log" ? `${v}h` : "—"),
+      },
+      {
+        key: "statusLabel",
+        label: "Status",
+        render: (v, row) =>
+          row.entryType === "task" ? (
+            <span className={`badge task-status task-status--${taskStatusClass(v)}`}>{v}</span>
+          ) : (
+            <span className="badge">{v}</span>
+          ),
+      },
+    ];
+    return base;
+  }, [isTeamView]);
 
   async function load() {
     try {
       setError("");
-      const [logData, projectData] = await Promise.all([
+      const [logData, updateData, projectData] = await Promise.all([
         workLogsApi.fetchAll(),
+        fetchProjectUpdates().catch(() => []),
         isTeamView ? projectsApi.fetchAll() : fetchMyProjects(),
       ]);
-      setLogs(
-        isTeamView
-          ? [...logData].sort((a, b) => b.date.localeCompare(a.date) || b.id - a.id)
-          : logData
-      );
+      setWorkLogs(logData);
+      setProjectUpdates(updateData);
       setProjects(projectData);
     } catch (err) {
       setError(err.message);
@@ -98,42 +213,6 @@ export default function DailyWork() {
     }
   }, [location.state, projects, isTeamView]);
 
-  const employeeOptions = useMemo(() => {
-    const map = new Map();
-    logs.forEach((log) => {
-      const key = log.userId ?? log.employeeId;
-      if (key != null && !map.has(key)) {
-        map.set(key, log.employeeName);
-      }
-    });
-    return [...map.entries()]
-      .map(([id, name]) => ({ id, name }))
-      .sort((a, b) => a.name.localeCompare(b.name));
-  }, [logs]);
-
-  const displayedLogs = useMemo(() => {
-    return logs.filter((log) => {
-      if (filterProject) {
-        if (filterProject === "none") {
-          if (log.projectId != null) return false;
-        } else if (log.projectId !== Number(filterProject)) {
-          return false;
-        }
-      }
-      if (filterEmployee) {
-        const id = Number(filterEmployee);
-        if (log.userId !== id && log.employeeId !== id) return false;
-      }
-      if (filterDate && log.date !== filterDate) return false;
-      return true;
-    });
-  }, [logs, filterProject, filterEmployee, filterDate]);
-
-  const totalHours = useMemo(
-    () => displayedLogs.reduce((sum, log) => sum + Number(log.hoursWorked || 0), 0),
-    [displayedLogs]
-  );
-
   function openCreate() {
     setEditing(null);
     setForm({ ...EMPTY, date: today() });
@@ -141,13 +220,15 @@ export default function DailyWork() {
   }
 
   function openEdit(row) {
-    setEditing(row);
+    if (row.entryType !== "work_log") return;
+    const log = row.raw;
+    setEditing(log);
     setForm({
-      projectId: row.projectId != null ? String(row.projectId) : "",
-      date: row.date,
-      hoursWorked: String(row.hoursWorked),
-      workDescription: row.workDescription,
-      progress: row.progress,
+      projectId: log.projectId != null ? String(log.projectId) : "",
+      date: log.date,
+      hoursWorked: String(log.hoursWorked),
+      workDescription: log.workDescription,
+      progress: log.progress,
     });
     setShowModal(true);
   }
@@ -162,13 +243,13 @@ export default function DailyWork() {
           workDescription: form.workDescription,
           progress: form.progress,
         });
-        setLogs((prev) => prev.map((l) => (l.id === updated.id ? updated : l)));
+        setWorkLogs((prev) => prev.map((l) => (l.id === updated.id ? updated : l)));
       } else {
         const created = await workLogsApi.create({
           ...form,
           projectId: form.projectId || null,
         });
-        setLogs((prev) => [...prev, created]);
+        setWorkLogs((prev) => [...prev, created]);
       }
       setShowModal(false);
     } catch (err) {
@@ -180,24 +261,30 @@ export default function DailyWork() {
     }
   }
 
-  async function handleDelete(id) {
+  async function handleDelete(row) {
+    if (row.entryType !== "work_log") return;
     if (!window.confirm("Delete this work log?")) return;
     try {
       setError("");
-      await workLogsApi.remove(id);
-      setLogs((prev) => prev.filter((l) => l.id !== id));
+      await workLogsApi.remove(row.sourceId);
+      setWorkLogs((prev) => prev.filter((l) => l.id !== row.sourceId));
     } catch (err) {
       setError(err.message);
     }
   }
 
+  function clearFilters() {
+    setFilterProject("");
+    setFilterEmployee("");
+    setFilterDate("");
+  }
+
   const pendingOnboarding = projects.filter((p) => p.onboardingRequired);
+  const hasFilters = Boolean(filterProject || filterEmployee || filterDate);
 
   const subtitle = isTeamView
-    ? user?.role === "hr"
-      ? "Log your own daily work and review updates submitted across all projects"
-      : "Log your own daily work and track team updates across projects"
-    : "Log what you worked on each day for your assigned projects";
+    ? "View daily logs, project tasks, and discussions — filter by project and date"
+    : "Your daily logs, project tasks, and discussions in one place";
 
   return (
     <>
@@ -221,18 +308,19 @@ export default function DailyWork() {
         </div>
       )}
       {error && <div className="alert error">{error}</div>}
-      {isTeamView && (
-        <div className="work-log-filters">
-          <label>
-            Project
-            <select value={filterProject} onChange={(e) => setFilterProject(e.target.value)}>
-              <option value="">All projects</option>
-              <option value="none">No project</option>
-              {projects.map((p) => (
-                <option key={p.id} value={p.id}>{p.name}</option>
-              ))}
-            </select>
-          </label>
+
+      <div className="work-log-filters">
+        <label>
+          Project
+          <select value={filterProject} onChange={(e) => setFilterProject(e.target.value)}>
+            <option value="">All projects</option>
+            <option value="none">No project</option>
+            {projects.map((p) => (
+              <option key={p.id} value={p.id}>{p.name}</option>
+            ))}
+          </select>
+        </label>
+        {isTeamView && (
           <label>
             Employee
             <select value={filterEmployee} onChange={(e) => setFilterEmployee(e.target.value)}>
@@ -242,41 +330,42 @@ export default function DailyWork() {
               ))}
             </select>
           </label>
-          <label>
-            Date
-            <input type="date" value={filterDate} onChange={(e) => setFilterDate(e.target.value)} />
-          </label>
-          {(filterProject || filterEmployee || filterDate) && (
-            <button
-              type="button"
-              className="btn-secondary btn-sm"
-              onClick={() => {
-                setFilterProject("");
-                setFilterEmployee("");
-                setFilterDate("");
-              }}
-            >
-              Clear filters
-            </button>
-          )}
-          <div className="work-log-summary">
-            <span>{displayedLogs.length} entries</span>
-            <span>{totalHours}h total</span>
-          </div>
+        )}
+        <label>
+          Date
+          <input type="date" value={filterDate} onChange={(e) => setFilterDate(e.target.value)} />
+        </label>
+        {hasFilters && (
+          <button type="button" className="btn-secondary btn-sm" onClick={clearFilters}>
+            Clear filters
+          </button>
+        )}
+        <div className="work-log-summary">
+          <span>{displayedItems.length} entries</span>
+          <span>{entryCounts.work_log} logs</span>
+          <span>{entryCounts.task} tasks</span>
+          <span>{entryCounts.discussion} discussions</span>
+          <span>{totalHours}h logged</span>
         </div>
-      )}
+      </div>
+
       {loading ? (
         <div className="loading-state">Loading...</div>
       ) : (
         <DataTable
           columns={columns}
-          rows={displayedLogs}
+          rows={displayedItems}
           onEdit={openEdit}
-          onDelete={handleDelete}
+          onDelete={(id) => {
+            const row = displayedItems.find((item) => item.id === id);
+            if (row) handleDelete(row);
+          }}
           canEdit={perms.edit}
-          canEditRow={isTeamView ? (row) => isOwnLog(row, user) : undefined}
+          canEditRow={(row) => row.entryType === "work_log" && (isTeamView ? isOwnLog(row.raw, user) : true)}
           canDelete={isTeamView || perms.delete}
-          canDeleteRow={(row) => isTeamView || perms.delete || isOwnLog(row, user)}
+          canDeleteRow={(row) =>
+            row.entryType === "work_log" && (isTeamView || perms.delete || isOwnLog(row.raw, user))
+          }
         />
       )}
 

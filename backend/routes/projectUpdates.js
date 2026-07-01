@@ -7,6 +7,7 @@ const FILE = dataPath("project_updates.json");
 const PROJECTS_FILE = dataPath("projects.json");
 
 const MANAGE_ROLES = new Set(["superadmin", "admin", "product_manager"]);
+const READ_ALL_ROLES = new Set(["superadmin", "admin", "product_manager", "hr"]);
 const POINT_TYPES = new Set(["discussion", "status"]);
 const TASK_STATUSES = new Set(["New", "Completed", "Carry forward"]);
 
@@ -23,7 +24,7 @@ function readProjects() {
 }
 
 function canAccessProject(user, projectId) {
-  if (MANAGE_ROLES.has(user.role)) return true;
+  if (READ_ALL_ROLES.has(user.role)) return true;
   if (user.role === "employee" && user.employeeId) {
     const project = readProjects().find((p) => p.id === projectId);
     return project && (project.assignedEmployeeIds || []).includes(user.employeeId);
@@ -33,7 +34,7 @@ function canAccessProject(user, projectId) {
 
 function getAccessibleProjectIds(user) {
   const projects = readProjects();
-  if (MANAGE_ROLES.has(user.role)) {
+  if (READ_ALL_ROLES.has(user.role)) {
     return projects.map((p) => p.id);
   }
   if (user.role === "employee" && user.employeeId) {
