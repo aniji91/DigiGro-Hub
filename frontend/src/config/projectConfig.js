@@ -3,6 +3,7 @@ export const PROJECT_TYPES = [
   { value: "website_redesign", label: "Website Redesign" },
   { value: "web_application", label: "Web Application" },
   { value: "landing_page", label: "Landing Page" },
+  { value: "w3", label: "W3" },
   { value: "other", label: "Other" },
 ];
 
