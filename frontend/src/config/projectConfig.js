@@ -11,6 +11,14 @@ export const PROJECT_TYPE_LABELS = Object.fromEntries(
   PROJECT_TYPES.map((type) => [type.value, type.label])
 );
 
+export const PROJECT_DOC_LINKS = [
+  { key: "sitemapLink", label: "Sitemap Link", placeholder: "https://docs.google.com/..." },
+  { key: "contentDoc", label: "Content Doc", placeholder: "https://docs.google.com/..." },
+  { key: "questionnaire", label: "Questionnaire", placeholder: "https://docs.google.com/..." },
+  { key: "logoBrand", label: "Logo & Brand", placeholder: "https://docs.google.com/..." },
+  { key: "imagePack", label: "Image Pack", placeholder: "https://docs.google.com/..." },
+];
+
 export const EMPTY_REFERENCE_SITE = { label: "", url: "" };
 
 export const EMPTY_PROJECT = {
@@ -24,6 +32,11 @@ export const EMPTY_PROJECT = {
   assignedEmployeeIds: [],
   ownerId: "",
   projectType: "website_creation",
+  sitemapLink: "",
+  contentDoc: "",
+  questionnaire: "",
+  logoBrand: "",
+  imagePack: "",
   existingSiteUrl: "",
   referenceSites: [{ label: "", url: "" }],
   suggestions: "",

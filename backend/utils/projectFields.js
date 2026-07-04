@@ -101,6 +101,26 @@ function normalizeProject(body, existing = {}) {
     assignedEmployeeIds,
     ownerId,
     projectType: body.projectType ?? existing.projectType ?? "website_creation",
+    sitemapLink:
+      body.sitemapLink !== undefined
+        ? (body.sitemapLink || "").trim()
+        : existing.sitemapLink || "",
+    contentDoc:
+      body.contentDoc !== undefined
+        ? (body.contentDoc || "").trim()
+        : existing.contentDoc || "",
+    questionnaire:
+      body.questionnaire !== undefined
+        ? (body.questionnaire || "").trim()
+        : existing.questionnaire || "",
+    logoBrand:
+      body.logoBrand !== undefined
+        ? (body.logoBrand || "").trim()
+        : existing.logoBrand || "",
+    imagePack:
+      body.imagePack !== undefined
+        ? (body.imagePack || "").trim()
+        : existing.imagePack || "",
     existingSiteUrl:
       body.existingSiteUrl !== undefined
         ? (body.existingSiteUrl || "").trim()

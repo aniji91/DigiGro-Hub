@@ -7,6 +7,7 @@ import { fetchEmployees } from "../api/employeeApi";
 import {
   EMPTY_PROJECT,
   EMPTY_REFERENCE_SITE,
+  PROJECT_DOC_LINKS,
   PROJECT_TYPES,
   PROJECT_TYPE_LABELS,
 } from "../config/projectConfig";
@@ -126,6 +127,11 @@ export default function Projects() {
       assignedEmployeeIds: row.assignedEmployeeIds || [],
       ownerId: row.ownerId ? String(row.ownerId) : "",
       projectType: row.projectType || "website_creation",
+      sitemapLink: row.sitemapLink || "",
+      contentDoc: row.contentDoc || "",
+      questionnaire: row.questionnaire || "",
+      logoBrand: row.logoBrand || "",
+      imagePack: row.imagePack || "",
       existingSiteUrl: row.existingSiteUrl || "",
       referenceSites:
         row.referenceSites?.length > 0
@@ -432,6 +438,20 @@ export default function Projects() {
                     placeholder="Brief summary of the project goals"
                   />
                 </label>
+
+                <div className="employee-form-grid">
+                  {PROJECT_DOC_LINKS.map((field) => (
+                    <label key={field.key} className="full-width-field span-2">
+                      {field.label}
+                      <input
+                        type="url"
+                        value={form[field.key] || ""}
+                        onChange={(e) => setForm({ ...form, [field.key]: e.target.value })}
+                        placeholder={field.placeholder}
+                      />
+                    </label>
+                  ))}
+                </div>
               </div>
 
               <div className="employee-form-section">

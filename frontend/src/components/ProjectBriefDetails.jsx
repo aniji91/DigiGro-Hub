@@ -1,4 +1,19 @@
-import { PROJECT_TYPE_LABELS } from "../config/projectConfig";
+import { PROJECT_DOC_LINKS, PROJECT_TYPE_LABELS } from "../config/projectConfig";
+
+function DocLinkRow({ label, url }) {
+  return (
+    <div className="view-row">
+      <span>{label}</span>
+      <strong>
+        {url ? (
+          <a href={url} target="_blank" rel="noreferrer">{url}</a>
+        ) : (
+          "—"
+        )}
+      </strong>
+    </div>
+  );
+}
 
 function BriefFields({ project, references, documents, grid = false }) {
   return (
@@ -71,6 +86,9 @@ export function ProjectBriefDetails({ project, hideOverview = false }) {
             <strong>{PROJECT_TYPE_LABELS[project.projectType] || project.projectType || "—"}</strong>
           </div>
           <div className="view-row"><span>Description</span><strong>{project.description || "—"}</strong></div>
+          {PROJECT_DOC_LINKS.map((field) => (
+            <DocLinkRow key={field.key} label={field.label} url={project[field.key]} />
+          ))}
           <div className="view-row"><span>Status</span><strong><span className="badge">{project.status}</span></strong></div>
           <div className="view-row"><span>Start Date</span><strong>{project.startDate}</strong></div>
           <div className="view-row"><span>End Date</span><strong>{project.endDate || "—"}</strong></div>
@@ -79,6 +97,14 @@ export function ProjectBriefDetails({ project, hideOverview = false }) {
 
       {hideOverview && project.description && (
         <p className="project-view-description">{project.description}</p>
+      )}
+
+      {hideOverview && (
+        <div className="view-details view-details--grid project-doc-links">
+          {PROJECT_DOC_LINKS.map((field) => (
+            <DocLinkRow key={field.key} label={field.label} url={project[field.key]} />
+          ))}
+        </div>
       )}
 
       {hasBrief ? (
