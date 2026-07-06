@@ -5351,6 +5351,22 @@
   box-shadow: 0 4px 16px rgba(15, 23, 42, 0.06);
 }
 
+.pm-task-form--modal {
+  border: none;
+  background: transparent;
+  box-shadow: none;
+  padding: 0;
+}
+
+.pm-task-form--modal .pm-task-form-fields {
+  margin-bottom: 1rem;
+}
+
+.pm-task-modal-subtitle {
+  margin: -0.25rem 0 1rem;
+  font-size: 0.9rem;
+}
+
 .pm-task-form--panel {
   margin-bottom: 1rem;
 }

@@ -1,9 +1,10 @@
-import { useEffect, useMemo, useRef, useState, Fragment } from "react";
+import { useEffect, useMemo, useState, Fragment } from "react";
 import { Link } from "react-router-dom";
-import { Plus, ChevronDown, ChevronUp, ExternalLink, ListTodo, Pencil, X } from "lucide-react";
+import { Plus, ChevronDown, ChevronUp, ExternalLink, Pencil } from "lucide-react";
 import { fetchProjectUpdates, projectUpdatesApi, projectsApi } from "../api/crmApi";
 import { fetchEmployees } from "../api/employeeApi";
 import PageHeader from "../components/PageHeader";
+import Modal from "../components/Modal";
 
 const STATUS_DAYS = 4;
 const TASK_STATUS_OPTIONS = ["New", "Completed", "Carry forward"];
@@ -158,7 +159,6 @@ export default function PmProjectBoard() {
   const [editingTaskId, setEditingTaskId] = useState(null);
   const [editTaskForms, setEditTaskForms] = useState({});
   const [savingTaskEditId, setSavingTaskEditId] = useState(null);
-  const editPanelRef = useRef(null);
 
   const statusDays = useMemo(() => getLastNDays(STATUS_DAYS), []);
   const employeeById = Object.fromEntries(employees.map((e) => [e.id, e]));
@@ -286,7 +286,6 @@ export default function PmProjectBoard() {
   function openAddTask(projectId) {
     setAddingForProject(projectId);
     setTaskForm(projectId, { content: "", taskStatus: "New", date: today() });
-    setExpandedProjectId(null);
     setEditingTaskId(null);
   }
 
@@ -350,9 +349,6 @@ export default function PmProjectBoard() {
       date: task.date,
     });
     setAddingForProject(null);
-    requestAnimationFrame(() => {
-      editPanelRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
-    });
   }
 
   function closeEditTask() {
@@ -475,32 +471,15 @@ export default function PmProjectBoard() {
       {error && <div className="alert error">{error}</div>}
 
       {addingProject && (
-        <form
-          className="pm-task-form pm-task-form--panel"
-          onSubmit={(e) => handleAddTask(e, addingProject)}
+        <Modal
+          title={`Add daily task — ${addingProject.name}`}
+          onClose={closeAddTask}
+          size="wide"
         >
-          <div className="pm-task-form-header">
-            <div className="pm-task-form-title">
-              <ListTodo size={18} />
-              <div>
-                <strong>Add daily task</strong>
-                <span>
-                  {addingProject.name}
-                  {addingProject.clientName ? ` · ${addingProject.clientName}` : ""}
-                </span>
-              </div>
-            </div>
-            <button
-              type="button"
-              className="icon-action"
-              onClick={closeAddTask}
-              title="Close"
-            >
-              <X size={18} />
-            </button>
-          </div>
-
-          <div className="pm-task-form-body">
+          <form className="pm-task-form pm-task-form--modal" onSubmit={(e) => handleAddTask(e, addingProject)}>
+            {addingProject.clientName && (
+              <p className="pm-task-modal-subtitle muted">{addingProject.clientName}</p>
+            )}
             <div className="pm-task-form-fields">
               <label className="pm-field">
                 <span className="pm-field__label">Date</span>
@@ -529,7 +508,7 @@ export default function PmProjectBoard() {
                 <span className="pm-field__label">Task / work description</span>
                 <textarea
                   className="pm-field__control pm-field__control--textarea"
-                  rows={3}
+                  rows={5}
                   value={getTaskForm(addingProject.id).content}
                   onChange={(e) => setTaskForm(addingProject.id, { content: e.target.value })}
                   placeholder="What was done today, blockers, next steps..."
@@ -538,53 +517,36 @@ export default function PmProjectBoard() {
                 />
               </label>
             </div>
-          </div>
-
-          <div className="pm-task-form-footer">
-            <button type="button" className="btn-secondary" onClick={closeAddTask}>
-              Cancel
-            </button>
-            <button type="submit" className="btn-primary" disabled={saving}>
-              <Plus size={16} />
-              {saving ? "Saving..." : "Save task"}
-            </button>
-          </div>
-        </form>
+            <div className="pm-task-form-footer">
+              <button type="button" className="btn-secondary" onClick={closeAddTask}>
+                Cancel
+              </button>
+              <button type="submit" className="btn-primary" disabled={saving}>
+                <Plus size={16} />
+                {saving ? "Saving..." : "Save task"}
+              </button>
+            </div>
+          </form>
+        </Modal>
       )}
 
       {editingTask && (
-        <form
-          ref={editPanelRef}
-          className="pm-task-form pm-task-form--panel pm-task-form--edit"
-          onSubmit={(e) => {
-            e.preventDefault();
-            handleSaveTaskEdit(editingTask);
-          }}
+        <Modal
+          title={`Edit daily task — ${editingProject?.name || editingTask.projectName || "Project"}`}
+          onClose={closeEditTask}
+          size="wide"
         >
-          <div className="pm-task-form-header">
-            <div className="pm-task-form-title">
-              <Pencil size={18} />
-              <div>
-                <strong>Edit daily task</strong>
-                <span>
-                  {editingProject?.name || editingTask.projectName || "Project"}
-                  {editingProject?.clientName ? ` · ${editingProject.clientName}` : ""}
-                  {" · "}
-                  {formatFullDate(getEditTaskForm(editingTask.id).date)}
-                </span>
-              </div>
-            </div>
-            <button
-              type="button"
-              className="icon-action"
-              onClick={closeEditTask}
-              title="Close"
-            >
-              <X size={18} />
-            </button>
-          </div>
-
-          <div className="pm-task-form-body">
+          <form
+            className="pm-task-form pm-task-form--modal"
+            onSubmit={(e) => {
+              e.preventDefault();
+              handleSaveTaskEdit(editingTask);
+            }}
+          >
+            <p className="pm-task-modal-subtitle muted">
+              {editingProject?.clientName ? `${editingProject.clientName} · ` : ""}
+              {formatFullDate(getEditTaskForm(editingTask.id).date)}
+            </p>
             <div className="pm-task-form-fields">
               <label className="pm-field">
                 <span className="pm-field__label">Date</span>
@@ -622,17 +584,16 @@ export default function PmProjectBoard() {
                 />
               </label>
             </div>
-          </div>
-
-          <div className="pm-task-form-footer">
-            <button type="button" className="btn-secondary" onClick={closeEditTask}>
-              Cancel
-            </button>
-            <button type="submit" className="btn-primary" disabled={savingTaskEditId === editingTask.id}>
-              {savingTaskEditId === editingTask.id ? "Saving..." : "Save changes"}
-            </button>
-          </div>
-        </form>
+            <div className="pm-task-form-footer">
+              <button type="button" className="btn-secondary" onClick={closeEditTask}>
+                Cancel
+              </button>
+              <button type="submit" className="btn-primary" disabled={savingTaskEditId === editingTask.id}>
+                {savingTaskEditId === editingTask.id ? "Saving..." : "Save changes"}
+              </button>
+            </div>
+          </form>
+        </Modal>
       )}
 
       {filteredProjects.length === 0 ? (
