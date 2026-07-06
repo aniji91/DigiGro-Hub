@@ -9,6 +9,11 @@ import {
   toDatetimeLocal,
 } from "../utils/projectTimeline";
 
+const timelineInputClass = "project-timeline-field-input pm-field__control";
+const timelineDateClass = `${timelineInputClass} pm-field__control--date`;
+const timelineSelectClass = `${timelineInputClass} pm-field__control--select`;
+const timelineTextareaClass = `${timelineInputClass} pm-field__control--textarea`;
+
 export default function ProjectTimelineManager({ tasks = [], onChange, readOnly = false }) {
   const sortedTasks = sortTimelineTasks(tasks);
 
@@ -134,7 +139,7 @@ export default function ProjectTimelineManager({ tasks = [], onChange, readOnly 
                       <label className="project-timeline-field project-timeline-field--activity">
                         <span className="project-timeline-field-label">Activity</span>
                         <input
-                          className="project-timeline-field-input"
+                          className={timelineInputClass}
                           value={task.activity}
                           onChange={(e) => updateTask(index, { activity: e.target.value })}
                           placeholder="e.g. Wireframe Design Delivery"
@@ -144,7 +149,7 @@ export default function ProjectTimelineManager({ tasks = [], onChange, readOnly 
                       <label className="project-timeline-field project-timeline-field--assignee">
                         <span className="project-timeline-field-label">Who</span>
                         <input
-                          className="project-timeline-field-input"
+                          className={timelineInputClass}
                           value={task.assignee}
                           onChange={(e) => updateTask(index, { assignee: e.target.value })}
                           placeholder="e.g. DigiGro / Client"
@@ -153,7 +158,7 @@ export default function ProjectTimelineManager({ tasks = [], onChange, readOnly 
                       <label className="project-timeline-field project-timeline-field--tentative">
                         <span className="project-timeline-field-label">Tentative date</span>
                         <input
-                          className="project-timeline-field-input project-timeline-field-input--date"
+                          className={timelineDateClass}
                           type="date"
                           value={task.tentativeDate}
                           onChange={(e) => updateTask(index, { tentativeDate: e.target.value })}
@@ -165,7 +170,7 @@ export default function ProjectTimelineManager({ tasks = [], onChange, readOnly 
                       <label className="project-timeline-field project-timeline-field--revised">
                         <span className="project-timeline-field-label">Revised date</span>
                         <input
-                          className="project-timeline-field-input project-timeline-field-input--date"
+                          className={timelineDateClass}
                           type="date"
                           value={task.revisedDate}
                           onChange={(e) => updateTask(index, { revisedDate: e.target.value })}
@@ -174,7 +179,7 @@ export default function ProjectTimelineManager({ tasks = [], onChange, readOnly 
                       <label className="project-timeline-field project-timeline-field--complete-by">
                         <span className="project-timeline-field-label">Complete by</span>
                         <input
-                          className="project-timeline-field-input project-timeline-field-input--datetime"
+                          className={timelineDateClass}
                           type="datetime-local"
                           value={toDatetimeLocal(task.completeBy)}
                           onChange={(e) =>
@@ -187,7 +192,7 @@ export default function ProjectTimelineManager({ tasks = [], onChange, readOnly 
                       <label className="project-timeline-field project-timeline-field--status">
                         <span className="project-timeline-field-label">Status</span>
                         <select
-                          className="project-timeline-field-input project-timeline-field-input--select"
+                          className={timelineSelectClass}
                           value={task.status}
                           onChange={(e) => updateTask(index, { status: e.target.value })}
                         >
@@ -202,7 +207,7 @@ export default function ProjectTimelineManager({ tasks = [], onChange, readOnly 
                       <label className="project-timeline-field project-timeline-field--prerequisites">
                         <span className="project-timeline-field-label">Pre-requisites / notes</span>
                         <textarea
-                          className="project-timeline-field-input project-timeline-field-input--textarea"
+                          className={timelineTextareaClass}
                           rows={2}
                           value={task.prerequisites}
                           onChange={(e) => updateTask(index, { prerequisites: e.target.value })}
@@ -212,7 +217,7 @@ export default function ProjectTimelineManager({ tasks = [], onChange, readOnly 
                       <label className="project-timeline-field project-timeline-field--overdue-note">
                         <span className="project-timeline-field-label">Reason / priority notes</span>
                         <textarea
-                          className="project-timeline-field-input project-timeline-field-input--textarea"
+                          className={timelineTextareaClass}
                           rows={2}
                           value={task.overdueNote}
                           onChange={(e) => updateTask(index, { overdueNote: e.target.value })}

@@ -5638,6 +5638,18 @@
   overflow-x: auto;
 }
 
+.projects-table {
+  min-width: 100%;
+}
+
+.projects-row-timeline > td {
+  width: 100%;
+}
+
+.projects-row-timeline > td[colspan] {
+  width: 100%;
+}
+
 .projects-col-expand {
   width: 2.5rem;
   padding-left: 0.5rem !important;
@@ -5671,8 +5683,12 @@
 }
 
 .projects-timeline-panel {
+  display: block;
+  width: 100%;
+  min-width: min(100%, 720px);
   padding: 1rem 1.25rem 1.25rem;
   border-top: 2px solid #e5e7eb;
+  box-sizing: border-box;
 }
 
 .projects-timeline-panel-head {
@@ -5713,7 +5729,7 @@
   background: #fff;
   border: 1px solid #e5e7eb;
   border-radius: 10px;
-  padding: 0.85rem 1rem;
+  padding: 1rem 1.1rem;
 }
 
 .project-timeline-card--overdue {
@@ -5742,15 +5758,15 @@
 .project-timeline-fields-row {
   display: grid;
   gap: 0.75rem 1rem;
-  align-items: end;
+  align-items: stretch;
 }
 
 .project-timeline-fields-row--primary {
-  grid-template-columns: minmax(0, 2fr) minmax(140px, 1fr) minmax(160px, 1fr);
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr) minmax(0, 1fr);
 }
 
 .project-timeline-fields-row--dates {
-  grid-template-columns: repeat(3, minmax(160px, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
 .project-timeline-fields-row--notes {
@@ -5775,21 +5791,7 @@
 
 .project-timeline-field-input {
   width: 100%;
-  font-size: 0.85rem;
-  font-weight: 400;
-  color: #111827;
-}
-
-.project-timeline-field-input--textarea {
-  min-height: 72px;
-  resize: vertical;
-  line-height: 1.45;
-}
-
-.project-timeline-field-input--date,
-.project-timeline-field-input--datetime,
-.project-timeline-field-input--select {
-  min-height: 38px;
+  min-width: 0;
 }
 
 .project-timeline-readonly {
