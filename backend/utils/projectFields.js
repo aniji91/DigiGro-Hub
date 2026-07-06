@@ -1,3 +1,34 @@
+function normalizeDueAt(value) {
+  if (!value) return null;
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return null;
+  return date.toISOString();
+}
+
+function normalizeTimelineTasks(tasks) {
+  if (!Array.isArray(tasks)) return [];
+
+  return tasks
+    .map((item, index) => {
+      const source = item && typeof item === "object" ? item : {};
+      const status = ["New", "Completed", "Carry forward"].includes(source.status)
+        ? source.status
+        : "New";
+      return {
+        id: source.id || `tl-${index + 1}`,
+        activity: (source.activity || "").trim(),
+        assignee: (source.assignee || "").trim(),
+        tentativeDate: source.tentativeDate ? String(source.tentativeDate).slice(0, 10) : "",
+        revisedDate: source.revisedDate ? String(source.revisedDate).slice(0, 10) : "",
+        completeBy: normalizeDueAt(source.completeBy),
+        prerequisites: (source.prerequisites || "").trim(),
+        status,
+        overdueNote: (source.overdueNote || "").trim(),
+      };
+    })
+    .filter((item) => item.activity);
+}
+
 function normalizeReferenceSites(sites) {
   if (!Array.isArray(sites)) return [];
   return sites
@@ -155,6 +186,10 @@ function normalizeProject(body, existing = {}) {
       body.externalCrmIntegrations !== undefined
         ? normalizeExternalCrmIntegrations(body.externalCrmIntegrations)
         : existing.externalCrmIntegrations || [],
+    timelineTasks:
+      body.timelineTasks !== undefined
+        ? normalizeTimelineTasks(body.timelineTasks)
+        : existing.timelineTasks || [],
   };
 }
 
@@ -164,4 +199,5 @@ module.exports = {
   normalizeDocuments,
   normalizeEnvironmentDetails,
   normalizeExternalCrmIntegrations,
+  normalizeTimelineTasks,
 };

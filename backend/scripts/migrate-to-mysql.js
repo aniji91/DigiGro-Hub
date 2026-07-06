@@ -142,8 +142,8 @@ async function syncNormalizedTables(connection) {
          (id, name, client_name, client_id, description, status, start_date, end_date,
           assigned_employee_ids, owner_id, project_type, existing_site_url, reference_sites, suggestions,
           target_audience, page_scope, tech_preferences, documents, staging_details,
-          production_details, external_crm_integrations, created_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          production_details, external_crm_integrations, timeline_tasks, created_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
           item.id,
           item.name,
@@ -166,6 +166,7 @@ async function syncNormalizedTables(connection) {
           JSON.stringify(item.stagingDetails || null),
           JSON.stringify(item.productionDetails || null),
           JSON.stringify(item.externalCrmIntegrations || []),
+          JSON.stringify(item.timelineTasks || []),
           item.createdAt || null,
         ]
       );

@@ -1,6 +1,6 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, Fragment } from "react";
 import { useNavigate } from "react-router-dom";
-import { Paperclip, Plus, X } from "lucide-react";
+import { ChevronDown, ChevronUp, Eye, Paperclip, Pencil, Plus, Trash2, X } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { projectsApi, clientsApi, fetchProjectTeamOnboarding } from "../api/crmApi";
 import { fetchEmployees } from "../api/employeeApi";
@@ -11,11 +11,12 @@ import {
   PROJECT_TYPES,
   PROJECT_TYPE_LABELS,
 } from "../config/projectConfig";
-import DataTable from "../components/DataTable";
 import Modal from "../components/Modal";
 import PageHeader from "../components/PageHeader";
 import { ProjectBriefDetails } from "../components/ProjectBriefDetails";
 import { ExternalCrmIntegrationsEditor } from "../components/ExternalCrmIntegrationsEditor";
+import ProjectTimelineManager from "../components/ProjectTimelineManager";
+import { projectHasOverdueTimeline } from "../utils/projectTimeline";
 
 const MAX_DOC_SIZE = 5 * 1024 * 1024;
 
@@ -50,9 +51,21 @@ export default function Projects() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
   const [docLoading, setDocLoading] = useState(false);
+  const [expandedProjectId, setExpandedProjectId] = useState(null);
+  const [timelineDrafts, setTimelineDrafts] = useState({});
+  const [savingTimelineId, setSavingTimelineId] = useState(null);
   const fileInputRef = useRef(null);
 
   const employeeMap = Object.fromEntries(employees.map((e) => [e.id, e.name]));
+
+  const sortedProjects = useMemo(() => {
+    return [...projects].sort((a, b) => {
+      const aOverdue = projectHasOverdueTimeline(a.timelineTasks);
+      const bOverdue = projectHasOverdueTimeline(b.timelineTasks);
+      if (aOverdue !== bOverdue) return aOverdue ? -1 : 1;
+      return a.name.localeCompare(b.name);
+    });
+  }, [projects]);
 
   const columns = [
     { key: "name", label: "Project" },
@@ -143,6 +156,7 @@ export default function Projects() {
       techPreferences: row.techPreferences || "",
       documents: row.documents || [],
       externalCrmIntegrations: row.externalCrmIntegrations || [],
+      timelineTasks: row.timelineTasks || [],
     };
   }
 
@@ -234,6 +248,40 @@ export default function Projects() {
     }));
   }
 
+  async function handleTimelineChange(project, timelineTasks) {
+    try {
+      setError("");
+      setSavingTimelineId(project.id);
+      const updated = await projectsApi.update(project.id, { timelineTasks });
+      setProjects((prev) => prev.map((p) => (p.id === updated.id ? updated : p)));
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setSavingTimelineId(null);
+    }
+  }
+
+  function toggleTimeline(projectId) {
+    setExpandedProjectId((prev) => {
+      const next = prev === projectId ? null : projectId;
+      if (next) {
+        const project = projects.find((p) => p.id === projectId);
+        setTimelineDrafts((drafts) => ({
+          ...drafts,
+          [projectId]: project?.timelineTasks || [],
+        }));
+      }
+      return next;
+    });
+  }
+
+  async function saveTimelineDraft(projectId) {
+    const project = projects.find((p) => p.id === projectId);
+    if (!project) return;
+    const timelineTasks = timelineDrafts[projectId] ?? project.timelineTasks ?? [];
+    await handleTimelineChange(project, timelineTasks);
+  }
+
   async function handleSubmit(e) {
     e.preventDefault();
     try {
@@ -285,18 +333,139 @@ export default function Projects() {
       {error && <div className="alert error">{error}</div>}
       {loading ? (
         <div className="loading-state">Loading...</div>
+      ) : sortedProjects.length === 0 ? (
+        <div className="empty-state">No records found. Add your first entry to get started.</div>
       ) : (
-        <DataTable
-          columns={columns}
-          rows={projects}
-          onView={(row) => navigate(`/view-projects/${row.id}`)}
-          onEdit={openEdit}
-          onDelete={handleDelete}
-          canView={perms.view}
-          canEdit={perms.edit}
-          canEditRow={canEditProject}
-          canDelete={perms.delete}
-        />
+        <div className="table-wrap projects-table-wrap">
+          <table className="data-table projects-table">
+            <thead>
+              <tr>
+                <th className="projects-col-expand" />
+                {columns.map((col) => (
+                  <th key={col.key}>{col.label}</th>
+                ))}
+                {(perms.view || perms.edit || perms.delete) && <th>Actions</th>}
+              </tr>
+            </thead>
+            <tbody>
+              {sortedProjects.map((row) => {
+                const isExpanded = expandedProjectId === row.id;
+                const hasOverdue = projectHasOverdueTimeline(row.timelineTasks);
+                const canEditRow = canEditProject(row);
+
+                return (
+                  <Fragment key={row.id}>
+                    <tr className={hasOverdue ? "projects-row-overdue" : ""}>
+                      <td className="projects-col-expand">
+                        <button
+                          type="button"
+                          className="icon-action projects-expand-btn"
+                          onClick={() => toggleTimeline(row.id)}
+                          title={isExpanded ? "Hide timeline" : "Expand timeline"}
+                        >
+                          {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                        </button>
+                      </td>
+                      {columns.map((col) => (
+                        <td key={col.key}>
+                          {col.key === "name" ? (
+                            <div className="projects-name-cell">
+                              <span>{col.render ? col.render(row[col.key], row) : row[col.key]}</span>
+                              {hasOverdue && <span className="pm-project-overdue-flag">Priority</span>}
+                            </div>
+                          ) : col.render ? (
+                            col.render(row[col.key], row)
+                          ) : (
+                            row[col.key]
+                          )}
+                        </td>
+                      ))}
+                      {(perms.view || perms.edit || perms.delete) && (
+                        <td>
+                          <div className="table-actions">
+                            {perms.view && (
+                              <button
+                                type="button"
+                                className="icon-action view"
+                                onClick={() => navigate(`/view-projects/${row.id}`)}
+                                title="View"
+                              >
+                                <Eye size={15} />
+                              </button>
+                            )}
+                            {perms.edit && canEditRow && (
+                              <button
+                                type="button"
+                                className="icon-action edit"
+                                onClick={() => openEdit(row)}
+                                title="Edit"
+                              >
+                                <Pencil size={15} />
+                              </button>
+                            )}
+                            {perms.delete && (
+                              <button
+                                type="button"
+                                className="icon-action delete"
+                                onClick={() => handleDelete(row.id)}
+                                title="Delete"
+                              >
+                                <Trash2 size={15} />
+                              </button>
+                            )}
+                          </div>
+                        </td>
+                      )}
+                    </tr>
+                    {isExpanded && (
+                      <tr className="projects-row-timeline">
+                        <td colSpan={columns.length + 2}>
+                          <div className="projects-timeline-panel">
+                            <div className="projects-timeline-panel-head">
+                              <h4>Timeline — {row.name}</h4>
+                              <div className="projects-timeline-panel-actions">
+                                {savingTimelineId === row.id && (
+                                  <span className="muted">Saving timeline...</span>
+                                )}
+                                {perms.edit && canEditRow && (
+                                  <button
+                                    type="button"
+                                    className="btn-primary btn-sm"
+                                    onClick={() => saveTimelineDraft(row.id)}
+                                    disabled={savingTimelineId === row.id}
+                                  >
+                                    Save timeline
+                                  </button>
+                                )}
+                              </div>
+                            </div>
+                            {perms.edit && canEditRow ? (
+                              <ProjectTimelineManager
+                                tasks={timelineDrafts[row.id] ?? row.timelineTasks ?? []}
+                                onChange={(timelineTasks) =>
+                                  setTimelineDrafts((drafts) => ({
+                                    ...drafts,
+                                    [row.id]: timelineTasks,
+                                  }))
+                                }
+                              />
+                            ) : (
+                              <ProjectTimelineManager
+                                tasks={row.timelineTasks || []}
+                                onChange={() => {}}
+                                readOnly
+                              />
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                  </Fragment>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
       )}
 
       {viewing && (
@@ -530,6 +699,13 @@ export default function Projects() {
                     placeholder="Design preferences, features, content notes, deadlines..."
                   />
                 </label>
+              </div>
+
+              <div className="employee-form-section">
+                <ProjectTimelineManager
+                  tasks={form.timelineTasks || []}
+                  onChange={(timelineTasks) => setForm({ ...form, timelineTasks })}
+                />
               </div>
 
               <div className="employee-form-section">

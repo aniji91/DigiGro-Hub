@@ -5625,4 +5625,151 @@
   .pm-inline-form-grid {
     grid-template-columns: 1fr;
   }
+
+  .project-timeline-fields {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Projects listing — expandable timeline */
+.projects-table-wrap {
+  overflow-x: auto;
+}
+
+.projects-col-expand {
+  width: 2.5rem;
+  padding-left: 0.5rem !important;
+  padding-right: 0.25rem !important;
+}
+
+.projects-expand-btn {
+  color: var(--text-muted);
+}
+
+.projects-row-overdue td {
+  background: #fff5f5;
+}
+
+.projects-row-overdue .projects-name-cell strong,
+.projects-row-overdue .projects-name-cell > span:first-child {
+  color: #b91c1c;
+}
+
+.projects-name-cell {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.projects-row-timeline td {
+  background: #f9fafb;
+  padding: 0 !important;
+  border-top: none;
+}
+
+.projects-timeline-panel {
+  padding: 1rem 1.25rem 1.25rem;
+  border-top: 2px solid #e5e7eb;
+}
+
+.projects-timeline-panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.85rem;
+}
+
+.projects-timeline-panel-head h4 {
+  margin: 0;
+  font-size: 0.95rem;
+}
+
+.projects-timeline-panel-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+.project-timeline-manager {
+  margin-top: 0.25rem;
+}
+
+.project-timeline-empty {
+  margin: 0;
+  font-size: 0.85rem;
+}
+
+.project-timeline-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.project-timeline-card {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 0.85rem 1rem;
+}
+
+.project-timeline-card--overdue {
+  border-color: #fecaca;
+  background: #fff5f5;
+}
+
+.project-timeline-card-head {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.65rem;
+}
+
+.project-timeline-card-head strong {
+  flex: 1;
+  font-size: 0.9rem;
+}
+
+.project-timeline-fields {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.65rem 0.85rem;
+}
+
+.project-timeline-fields label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+
+.project-timeline-fields input,
+.project-timeline-fields select,
+.project-timeline-fields textarea {
+  font-size: 0.85rem;
+}
+
+.project-timeline-readonly {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.5rem 0.85rem;
+  font-size: 0.82rem;
+}
+
+.project-timeline-readonly p {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.project-timeline-readonly span {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+}
+
+.project-timeline-note {
+  grid-column: 1 / -1;
 }

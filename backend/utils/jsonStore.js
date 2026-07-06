@@ -77,6 +77,7 @@ async function restoreProjectsFromTableIfNeeded() {
     stagingDetails: parseJsonColumn(row.staging_details, null),
     productionDetails: parseJsonColumn(row.production_details, null),
     externalCrmIntegrations: parseJsonColumn(row.external_crm_integrations, []),
+    timelineTasks: parseJsonColumn(row.timeline_tasks, []),
     createdAt: row.created_at || null,
   }));
 
@@ -92,6 +93,7 @@ async function runDataMigrations() {
   const alterStatements = [
     "ALTER TABLE project_updates ADD COLUMN due_at DATETIME NULL",
     "ALTER TABLE project_updates ADD COLUMN overdue_note TEXT NULL",
+    "ALTER TABLE projects ADD COLUMN timeline_tasks JSON NULL",
   ];
   for (const statement of alterStatements) {
     try {

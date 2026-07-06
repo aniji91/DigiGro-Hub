@@ -45,6 +45,7 @@ export const EMPTY_PROJECT = {
   techPreferences: "",
   documents: [],
   externalCrmIntegrations: [],
+  timelineTasks: [],
 };
 
 export const EXTERNAL_CRM_PROVIDERS = [

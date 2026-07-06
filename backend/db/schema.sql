@@ -75,6 +75,7 @@ CREATE TABLE IF NOT EXISTS projects (
   staging_details JSON NULL,
   production_details JSON NULL,
   external_crm_integrations JSON NULL,
+  timeline_tasks JSON NULL,
   created_at DATETIME NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
