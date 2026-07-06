@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState, Fragment } from "react";
 import { useNavigate } from "react-router-dom";
-import { ChevronDown, ChevronUp, Eye, Paperclip, Pencil, Plus, Trash2, X } from "lucide-react";
+import { ChevronDown, ChevronUp, Eye, EyeOff, Paperclip, Pencil, Plus, Trash2, X } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { projectsApi, clientsApi, fetchProjectTeamOnboarding } from "../api/crmApi";
 import { fetchEmployees } from "../api/employeeApi";
@@ -54,18 +54,31 @@ export default function Projects() {
   const [expandedProjectId, setExpandedProjectId] = useState(null);
   const [timelineDrafts, setTimelineDrafts] = useState({});
   const [savingTimelineId, setSavingTimelineId] = useState(null);
+  const [listMode, setListMode] = useState("active");
   const fileInputRef = useRef(null);
 
   const employeeMap = Object.fromEntries(employees.map((e) => [e.id, e.name]));
 
+  const { activeProjects, hiddenProjects } = useMemo(() => {
+    const active = [];
+    const hidden = [];
+    for (const project of projects) {
+      if (project.isHidden) hidden.push(project);
+      else active.push(project);
+    }
+    return { activeProjects: active, hiddenProjects: hidden };
+  }, [projects]);
+
+  const listProjects = listMode === "hidden" ? hiddenProjects : activeProjects;
+
   const sortedProjects = useMemo(() => {
-    return [...projects].sort((a, b) => {
+    return [...listProjects].sort((a, b) => {
       const aOverdue = projectHasOverdueTimeline(a.timelineTasks);
       const bOverdue = projectHasOverdueTimeline(b.timelineTasks);
       if (aOverdue !== bOverdue) return aOverdue ? -1 : 1;
       return a.name.localeCompare(b.name);
     });
-  }, [projects]);
+  }, [listProjects]);
 
   const columns = [
     { key: "name", label: "Project" },
@@ -157,6 +170,7 @@ export default function Projects() {
       documents: row.documents || [],
       externalCrmIntegrations: row.externalCrmIntegrations || [],
       timelineTasks: row.timelineTasks || [],
+      isHidden: Boolean(row.isHidden),
     };
   }
 
@@ -317,6 +331,36 @@ export default function Projects() {
     }
   }
 
+  async function handleHideProject(row) {
+    if (row.status !== "Completed") return;
+    if (!window.confirm(`Hide "${row.name}" from the active projects list?`)) return;
+    try {
+      setError("");
+      const updated = await projectsApi.update(row.id, { isHidden: true });
+      setProjects((prev) => prev.map((p) => (p.id === updated.id ? updated : p)));
+      if (expandedProjectId === row.id) setExpandedProjectId(null);
+    } catch (err) {
+      setError(err.message);
+    }
+  }
+
+  async function handleUnhideProject(row) {
+    if (!window.confirm(`Show "${row.name}" in the active projects list again?`)) return;
+    try {
+      setError("");
+      const updated = await projectsApi.update(row.id, { isHidden: false });
+      setProjects((prev) => prev.map((p) => (p.id === updated.id ? updated : p)));
+      if (expandedProjectId === row.id) setExpandedProjectId(null);
+    } catch (err) {
+      setError(err.message);
+    }
+  }
+
+  function switchListMode(mode) {
+    setListMode(mode);
+    setExpandedProjectId(null);
+  }
+
   function getAssignedNames(ids = []) {
     return ids.map((id) => employeeMap[id]).filter(Boolean);
   }
@@ -324,17 +368,45 @@ export default function Projects() {
   return (
     <>
       <PageHeader
-        title="Projects"
-        subtitle="Create website projects with briefs, references, and team assignments"
+        title={listMode === "hidden" ? "Hidden Projects" : "Projects"}
+        subtitle={
+          listMode === "hidden"
+            ? "Completed projects hidden from the main list. Unhide to show them again."
+            : "Create website projects with briefs, references, and team assignments"
+        }
         actionLabel="New Project"
         onAction={openCreate}
-        showAction={perms.create && !isEmployee}
+        showAction={perms.create && !isEmployee && listMode === "active"}
       />
+
+      <div className="projects-list-tabs">
+        <button
+          type="button"
+          className={`projects-list-tab ${listMode === "active" ? "projects-list-tab--active" : ""}`}
+          onClick={() => switchListMode("active")}
+        >
+          Active projects
+          <span className="projects-list-tab-count">{activeProjects.length}</span>
+        </button>
+        <button
+          type="button"
+          className={`projects-list-tab ${listMode === "hidden" ? "projects-list-tab--active" : ""}`}
+          onClick={() => switchListMode("hidden")}
+        >
+          Hidden projects
+          <span className="projects-list-tab-count">{hiddenProjects.length}</span>
+        </button>
+      </div>
+
       {error && <div className="alert error">{error}</div>}
       {loading ? (
         <div className="loading-state">Loading...</div>
       ) : sortedProjects.length === 0 ? (
-        <div className="empty-state">No records found. Add your first entry to get started.</div>
+        <div className="empty-state">
+          {listMode === "hidden"
+            ? "No hidden projects yet. Hide a completed project from the active list to see it here."
+            : "No records found. Add your first entry to get started."}
+        </div>
       ) : (
         <div className="table-wrap projects-table-wrap">
           <table className="data-table projects-table">
@@ -401,6 +473,29 @@ export default function Projects() {
                                 title="Edit"
                               >
                                 <Pencil size={15} />
+                              </button>
+                            )}
+                            {listMode === "active" &&
+                              row.status === "Completed" &&
+                              perms.edit &&
+                              canEditRow && (
+                                <button
+                                  type="button"
+                                  className="icon-action hide"
+                                  onClick={() => handleHideProject(row)}
+                                  title="Hide project"
+                                >
+                                  <EyeOff size={15} />
+                                </button>
+                              )}
+                            {listMode === "hidden" && perms.edit && canEditRow && (
+                              <button
+                                type="button"
+                                className="icon-action unhide"
+                                onClick={() => handleUnhideProject(row)}
+                                title="Unhide project"
+                              >
+                                <Eye size={15} />
                               </button>
                             )}
                             {perms.delete && (

@@ -2392,6 +2392,25 @@
   background: #c7d2fe;
 }
 
+.icon-action.hide {
+  background: #f3f4f6;
+  color: #6b7280;
+}
+
+.icon-action.hide:hover {
+  background: #e5e7eb;
+  color: #374151;
+}
+
+.icon-action.unhide {
+  background: #ecfdf5;
+  color: #047857;
+}
+
+.icon-action.unhide:hover {
+  background: #d1fae5;
+}
+
 .view-details {
   display: flex;
   flex-direction: column;
@@ -5634,6 +5653,57 @@
 }
 
 /* Projects listing — expandable timeline */
+.projects-list-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.projects-list-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.5rem 0.9rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: #fff;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 0.15s, background-color 0.15s, color 0.15s;
+}
+
+.projects-list-tab:hover {
+  border-color: #cbd5e1;
+  color: var(--text);
+}
+
+.projects-list-tab--active {
+  border-color: var(--brand);
+  background: #fff5f2;
+  color: var(--brand);
+}
+
+.projects-list-tab-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.35rem;
+  height: 1.35rem;
+  padding: 0 0.35rem;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.06);
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.projects-list-tab--active .projects-list-tab-count {
+  background: rgba(239, 68, 35, 0.12);
+  color: var(--brand);
+}
+
 .projects-table-wrap {
   overflow-x: auto;
 }

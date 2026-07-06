@@ -46,6 +46,7 @@ export const EMPTY_PROJECT = {
   documents: [],
   externalCrmIntegrations: [],
   timelineTasks: [],
+  isHidden: false,
 };
 
 export const EXTERNAL_CRM_PROVIDERS = [

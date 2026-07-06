@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { fetchDailyWork, fetchMyProjects, projectsApi, workLogsApi } from "../api/crmApi";
+import { filterActiveProjects } from "../utils/projectVisibility";
 import DataTable from "../components/DataTable";
 import Modal from "../components/Modal";
 import PageHeader from "../components/PageHeader";
@@ -182,7 +183,7 @@ export default function DailyWork() {
       ]);
       setWorkLogs(dailyData.workLogs);
       setProjectUpdates(dailyData.projectUpdates);
-      setProjects(projectData);
+      setProjects(filterActiveProjects(projectData));
     } catch (err) {
       setError(err.message);
     } finally {

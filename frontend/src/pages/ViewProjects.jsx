@@ -9,6 +9,7 @@ import { ProjectBriefDetails } from "../components/ProjectBriefDetails";
 import { ProjectEnvironmentDetails } from "../components/ProjectEnvironmentDetails";
 import { ProjectExternalCrmDetails } from "../components/ProjectExternalCrmDetails";
 import ProjectOnboardingPanel from "../components/ProjectOnboardingPanel";
+import { filterActiveProjects } from "../utils/projectVisibility";
 
 const today = () => new Date().toISOString().slice(0, 10);
 
@@ -61,6 +62,7 @@ export default function ViewProjects() {
 
   const selectedId = projectId ? Number(projectId) : null;
   const selectedProject = projects.find((p) => p.id === selectedId) || null;
+  const visibleProjects = useMemo(() => filterActiveProjects(projects), [projects]);
   const employeeMap = Object.fromEntries(employees.map((e) => [e.id, e.name]));
 
   const filteredUpdates = useMemo(() => {
@@ -264,7 +266,7 @@ export default function ViewProjects() {
     return <div className="project-view-page"><div className="loading-state">Loading projects...</div></div>;
   }
 
-  if (projects.length === 0) {
+  if (visibleProjects.length === 0) {
     return (
       <div className="project-view-page">
         <div className="empty-state">No projects available to view.</div>
@@ -281,10 +283,10 @@ export default function ViewProjects() {
               <h1>All projects</h1>
               <p className="muted">Select a project to view details and daily updates</p>
             </div>
-            <span className="project-view-list-count">{projects.length} total</span>
+            <span className="project-view-list-count">{visibleProjects.length} total</span>
           </header>
           <ul className="project-view-grid">
-            {projects.map((project) => (
+            {visibleProjects.map((project) => (
               <li key={project.id}>
                 <button
                   type="button"

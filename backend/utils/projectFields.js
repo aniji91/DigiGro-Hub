@@ -190,7 +190,18 @@ function normalizeProject(body, existing = {}) {
       body.timelineTasks !== undefined
         ? normalizeTimelineTasks(body.timelineTasks)
         : existing.timelineTasks || [],
+    isHidden: normalizeIsHidden(body, existing),
   };
+}
+
+function normalizeIsHidden(body, existing = {}) {
+  const status =
+    body.status !== undefined ? (body.status || "Planning").trim() : existing.status || "Planning";
+  const requestedHidden =
+    body.isHidden !== undefined ? Boolean(body.isHidden) : Boolean(existing.isHidden);
+
+  if (status !== "Completed") return false;
+  return requestedHidden;
 }
 
 module.exports = {

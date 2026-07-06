@@ -20,6 +20,7 @@ import { useAuth } from "../context/AuthContext";
 import { useChatNotifications } from "../context/ChatNotificationContext";
 import { ROLE_COLORS } from "../config/menuConfig";
 import { projectsApi } from "../api/crmApi";
+import { filterActiveProjects } from "../utils/projectVisibility";
 import { fetchEmployees } from "../api/employeeApi";
 import {
   createChannel,
@@ -390,7 +391,7 @@ export default function TeamChat() {
             projectsApi.fetchAll().catch(() => []),
             fetchChannelUsers().catch(() => []),
           ]);
-          setProjects(projectData);
+          setProjects(filterActiveProjects(projectData));
           setAllUsers(userData);
         }
       } catch (err) {
