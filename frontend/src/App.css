@@ -5303,6 +5303,23 @@
   margin-top: 0.2rem;
 }
 
+.pm-project-env-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-top: 0.45rem;
+}
+
+.pm-env-access-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  text-decoration: none;
+  font-size: 0.72rem;
+  padding: 0.25rem 0.5rem;
+  white-space: nowrap;
+}
+
 .pm-day-empty {
   color: #d1d5db;
 }

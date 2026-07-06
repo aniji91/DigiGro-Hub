@@ -141,6 +141,49 @@ function isCompletedProject(project) {
   return (project.status || "").toLowerCase() === "completed";
 }
 
+function getEnvSiteUrl(project, envKey) {
+  const raw = (project?.[envKey]?.siteUrl || "").trim();
+  if (!raw) return "";
+  if (/^https?:\/\//i.test(raw)) return raw;
+  return `https://${raw}`;
+}
+
+function ProjectEnvLinks({ project }) {
+  const stagingUrl = getEnvSiteUrl(project, "stagingDetails");
+  const liveUrl = getEnvSiteUrl(project, "productionDetails");
+
+  if (!stagingUrl && !liveUrl) return null;
+
+  return (
+    <div className="pm-project-env-links">
+      {stagingUrl && (
+        <a
+          href={stagingUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="btn-secondary btn-sm pm-env-access-btn"
+          title={`Open staging site: ${stagingUrl}`}
+        >
+          <ExternalLink size={12} />
+          Access staging
+        </a>
+      )}
+      {liveUrl && (
+        <a
+          href={liveUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="btn-secondary btn-sm pm-env-access-btn"
+          title={`Open live site: ${liveUrl}`}
+        >
+          <ExternalLink size={12} />
+          Access live
+        </a>
+      )}
+    </div>
+  );
+}
+
 export default function PmProjectBoard() {
   const [projects, setProjects] = useState([]);
   const [employees, setEmployees] = useState([]);
@@ -627,6 +670,7 @@ export default function PmProjectBoard() {
                         {project.clientName ? (
                           <span className="pm-board-client">{project.clientName}</span>
                         ) : null}
+                        <ProjectEnvLinks project={project} />
                       </td>
                       <td className="pm-col-owner">
                         <label className="pm-owner-select">
