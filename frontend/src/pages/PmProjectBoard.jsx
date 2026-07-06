@@ -1,12 +1,13 @@
 import { useEffect, useMemo, useState, Fragment } from "react";
 import { Link } from "react-router-dom";
-import { Plus, ChevronDown, ChevronUp, ExternalLink, ListTodo, X } from "lucide-react";
+import { Plus, ChevronDown, ChevronUp, ExternalLink, ListTodo, Pencil, X } from "lucide-react";
 import { fetchProjectUpdates, projectUpdatesApi, projectsApi } from "../api/crmApi";
 import { fetchEmployees } from "../api/employeeApi";
 import PageHeader from "../components/PageHeader";
 
 const STATUS_DAYS = 4;
 const TASK_STATUS_OPTIONS = ["New", "Completed", "Carry forward"];
+const PROJECT_STATUS_OPTIONS = ["Planning", "In Progress", "On Hold", "Completed"];
 
 const today = () => new Date().toISOString().slice(0, 10);
 
@@ -76,6 +77,110 @@ function TaskStatusSelect({ task, onChange, disabled }) {
   );
 }
 
+function ProjectStatusSelect({ project, onChange, disabled }) {
+  return (
+    <select
+      className={`pm-project-status-select status-pill status-pill--${statusClass(project.status)}`}
+      value={project.status}
+      onChange={(e) => onChange(project, e.target.value)}
+      disabled={disabled}
+      title="Update project status"
+      aria-label={`Project status for ${project.name}`}
+    >
+      {PROJECT_STATUS_OPTIONS.map((opt) => (
+        <option key={opt} value={opt}>{opt}</option>
+      ))}
+    </select>
+  );
+}
+
+function TaskCard({
+  task,
+  updatingTaskId,
+  editingTaskId,
+  editForm,
+  onStatusChange,
+  onEdit,
+  onEditFormChange,
+  onSaveEdit,
+  onCancelEdit,
+  savingEdit,
+}) {
+  const isEditing = editingTaskId === task.id;
+
+  if (isEditing) {
+    return (
+      <div className="pm-day-task pm-day-task--editing">
+        <form
+          className="pm-task-edit-form"
+          onSubmit={(e) => {
+            e.preventDefault();
+            onSaveEdit(task);
+          }}
+        >
+          <input
+            type="date"
+            className="pm-field__control pm-field__control--date"
+            value={editForm.date}
+            onChange={(e) => onEditFormChange(task.id, { date: e.target.value })}
+            required
+          />
+          <select
+            className="pm-field__control pm-field__control--select"
+            value={editForm.taskStatus}
+            onChange={(e) => onEditFormChange(task.id, { taskStatus: e.target.value })}
+            required
+          >
+            {TASK_STATUS_OPTIONS.map((opt) => (
+              <option key={opt} value={opt}>{opt}</option>
+            ))}
+          </select>
+          <textarea
+            className="pm-field__control pm-field__control--textarea"
+            rows={3}
+            value={editForm.content}
+            onChange={(e) => onEditFormChange(task.id, { content: e.target.value })}
+            required
+          />
+          <div className="pm-task-edit-actions">
+            <button type="button" className="btn-secondary btn-sm" onClick={onCancelEdit}>
+              Cancel
+            </button>
+            <button type="submit" className="btn-primary btn-sm" disabled={savingEdit}>
+              {savingEdit ? "Saving..." : "Save"}
+            </button>
+          </div>
+        </form>
+      </div>
+    );
+  }
+
+  return (
+    <div className="pm-day-task">
+      <div className="pm-day-task-head">
+        <TaskStatusSelect
+          task={task}
+          onChange={onStatusChange}
+          disabled={updatingTaskId === task.id}
+        />
+        <button
+          type="button"
+          className="icon-action pm-task-edit-btn"
+          onClick={() => onEdit(task)}
+          title="Edit task"
+          aria-label={`Edit task: ${task.content}`}
+        >
+          <Pencil size={13} />
+        </button>
+      </div>
+      <p>{task.content}</p>
+      <span className="pm-task-status-time">
+        Status updated {formatDateTime(getStatusUpdatedAt(task))}
+      </span>
+    </div>
+  );
+}
+
 function initials(name = "") {
   return name
     .split(" ")
@@ -108,7 +213,11 @@ export default function PmProjectBoard() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [savingOwnerId, setSavingOwnerId] = useState(null);
+  const [savingProjectStatusId, setSavingProjectStatusId] = useState(null);
   const [updatingTaskId, setUpdatingTaskId] = useState(null);
+  const [editingTaskId, setEditingTaskId] = useState(null);
+  const [editTaskForms, setEditTaskForms] = useState({});
+  const [savingTaskEditId, setSavingTaskEditId] = useState(null);
 
   const statusDays = useMemo(() => getLastNDays(STATUS_DAYS), []);
   const employeeById = Object.fromEntries(employees.map((e) => [e.id, e]));
@@ -251,6 +360,68 @@ export default function PmProjectBoard() {
       setError(err.message);
     } finally {
       setSavingOwnerId(null);
+    }
+  }
+
+  async function handleProjectStatusChange(project, nextStatus) {
+    if (project.status === nextStatus) return;
+
+    try {
+      setSavingProjectStatusId(project.id);
+      setError("");
+      const updated = await projectsApi.update(project.id, { status: nextStatus });
+      setProjects((prev) => prev.map((p) => (p.id === updated.id ? updated : p)));
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setSavingProjectStatusId(null);
+    }
+  }
+
+  function getEditTaskForm(taskId) {
+    return editTaskForms[taskId] || { content: "", taskStatus: "New", date: today() };
+  }
+
+  function setEditTaskForm(taskId, patch) {
+    setEditTaskForms((prev) => ({
+      ...prev,
+      [taskId]: { ...getEditTaskForm(taskId), ...patch },
+    }));
+  }
+
+  function openEditTask(task) {
+    setEditingTaskId(task.id);
+    setEditTaskForm(task.id, {
+      content: task.content,
+      taskStatus: task.taskStatus || "New",
+      date: task.date,
+    });
+    setAddingForProject(null);
+  }
+
+  function closeEditTask() {
+    setEditingTaskId(null);
+  }
+
+  async function handleSaveTaskEdit(task) {
+    const form = getEditTaskForm(task.id);
+    if (!form.content.trim()) return;
+
+    try {
+      setSavingTaskEditId(task.id);
+      setError("");
+      const updated = await projectUpdatesApi.update(task.id, {
+        date: form.date,
+        type: "status",
+        content: form.content.trim(),
+        taskStatus: form.taskStatus,
+      });
+      setUpdates((prev) => prev.map((u) => (u.id === updated.id ? updated : u)));
+      setEditingTaskId(null);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setSavingTaskEditId(null);
     }
   }
 
@@ -497,9 +668,11 @@ export default function PmProjectBoard() {
                         )}
                       </td>
                       <td className="pm-col-status">
-                        <span className={`status-pill status-pill--${statusClass(project.status)}`}>
-                          {project.status}
-                        </span>
+                        <ProjectStatusSelect
+                          project={project}
+                          onChange={handleProjectStatusChange}
+                          disabled={savingProjectStatusId === project.id}
+                        />
                       </td>
                       {statusDays.map((day) => {
                         const tasks = getTasksForDate(project.id, day);
@@ -510,17 +683,19 @@ export default function PmProjectBoard() {
                             ) : (
                               <ul className="pm-day-tasks">
                                 {tasks.map((task) => (
-                                  <li key={task.id} className="pm-day-task">
-                                    <TaskStatusSelect
-                                      task={task}
-                                      onChange={handleTaskStatusUpdate}
-                                      disabled={updatingTaskId === task.id}
-                                    />
-                                    <p>{task.content}</p>
-                                    <span className="pm-task-status-time">
-                                      Status updated {formatDateTime(getStatusUpdatedAt(task))}
-                                    </span>
-                                  </li>
+                                  <TaskCard
+                                    key={task.id}
+                                    task={task}
+                                    updatingTaskId={updatingTaskId}
+                                    editingTaskId={editingTaskId}
+                                    editForm={getEditTaskForm(task.id)}
+                                    onStatusChange={handleTaskStatusUpdate}
+                                    onEdit={openEditTask}
+                                    onEditFormChange={setEditTaskForm}
+                                    onSaveEdit={handleSaveTaskEdit}
+                                    onCancelEdit={closeEditTask}
+                                    savingEdit={savingTaskEditId === task.id}
+                                  />
                                 ))}
                               </ul>
                             )}
@@ -573,19 +748,24 @@ export default function PmProjectBoard() {
                                     <ul>
                                       {items.map((item) => (
                                         <li key={item.id}>
-                                          <TaskStatusSelect
+                                          <TaskCard
                                             task={item}
-                                            onChange={handleTaskStatusUpdate}
-                                            disabled={updatingTaskId === item.id}
+                                            updatingTaskId={updatingTaskId}
+                                            editingTaskId={editingTaskId}
+                                            editForm={getEditTaskForm(item.id)}
+                                            onStatusChange={handleTaskStatusUpdate}
+                                            onEdit={openEditTask}
+                                            onEditFormChange={setEditTaskForm}
+                                            onSaveEdit={handleSaveTaskEdit}
+                                            onCancelEdit={closeEditTask}
+                                            savingEdit={savingTaskEditId === item.id}
                                           />
-                                          <p>{item.content}</p>
                                           <span className="celebration-meta">
                                             {item.authorName} · added{" "}
                                             {new Date(item.createdAt).toLocaleTimeString("en-US", {
                                               hour: "numeric",
                                               minute: "2-digit",
                                             })}
-                                            {" · "}status updated {formatDateTime(getStatusUpdatedAt(item))}
                                           </span>
                                         </li>
                                       ))}

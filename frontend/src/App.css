@@ -1172,6 +1172,96 @@
   cursor: wait;
 }
 
+.pm-project-status-select {
+  display: inline-block;
+  max-width: 100%;
+  padding: 0.25rem 1.5rem 0.25rem 0.55rem;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  font-size: 0.72rem;
+  font-weight: 600;
+  line-height: 1.2;
+  cursor: pointer;
+  appearance: none;
+  background-repeat: no-repeat;
+  background-position: right 0.35rem center;
+  background-size: 0.75rem;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+}
+
+.pm-project-status-select.status-pill--planning {
+  background-color: #fef3c7;
+  color: #b45309;
+}
+
+.pm-project-status-select.status-pill--in-progress {
+  background-color: #dbeafe;
+  color: #1d4ed8;
+}
+
+.pm-project-status-select.status-pill--on-hold {
+  background-color: #f3f4f6;
+  color: #4b5563;
+}
+
+.pm-project-status-select.status-pill--completed {
+  background-color: #d1fae5;
+  color: #065f46;
+}
+
+.pm-project-status-select:disabled {
+  opacity: 0.7;
+  cursor: wait;
+}
+
+.pm-day-task-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.35rem;
+}
+
+.pm-task-edit-btn {
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  color: var(--text-muted);
+}
+
+.pm-task-edit-btn:hover {
+  color: var(--primary);
+}
+
+.pm-day-task--editing {
+  padding: 0.5rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: #fff;
+}
+
+.pm-task-edit-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.pm-task-edit-form textarea {
+  min-height: 4.5rem;
+  resize: vertical;
+}
+
+.pm-task-edit-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.35rem;
+}
+
+.pm-detail-day > ul > li {
+  list-style: none;
+  margin-bottom: 0.75rem;
+}
+
 .pm-task-status-time {
   display: block;
   margin-top: 0.2rem;
