@@ -76,96 +76,150 @@ export default function ProjectTimelineManager({ tasks = [], onChange, readOnly 
 
                 {readOnly ? (
                   <div className="project-timeline-readonly">
-                    <p><span>Who</span><strong>{task.assignee || "—"}</strong></p>
-                    <p><span>Tentative date</span><strong>{task.tentativeDate || "—"}</strong></p>
-                    <p><span>Revised date</span><strong>{task.revisedDate || "—"}</strong></p>
-                    <p><span>Status</span><strong>{task.status}</strong></p>
-                    {formatTimelineDue(task) && (
-                      <p><span>Complete by</span><strong>{formatTimelineDue(task)}</strong></p>
-                    )}
-                    {task.prerequisites && (
-                      <p className="project-timeline-note"><span>Pre-requisites</span>{task.prerequisites}</p>
-                    )}
-                    {task.overdueNote && (
-                      <p className="project-timeline-note"><span>Reason</span>{task.overdueNote}</p>
+                    <div className="project-timeline-fields-row project-timeline-fields-row--primary">
+                      <p className="project-timeline-field project-timeline-field--activity">
+                        <span className="project-timeline-field-label">Activity</span>
+                        <strong>{task.activity || "—"}</strong>
+                      </p>
+                      <p className="project-timeline-field project-timeline-field--assignee">
+                        <span className="project-timeline-field-label">Who</span>
+                        <strong>{task.assignee || "—"}</strong>
+                      </p>
+                      <p className="project-timeline-field project-timeline-field--tentative">
+                        <span className="project-timeline-field-label">Tentative date</span>
+                        <strong>{task.tentativeDate || "—"}</strong>
+                      </p>
+                    </div>
+                    <div className="project-timeline-fields-row project-timeline-fields-row--dates">
+                      <p className="project-timeline-field project-timeline-field--revised">
+                        <span className="project-timeline-field-label">Revised date</span>
+                        <strong>{task.revisedDate || "—"}</strong>
+                      </p>
+                      {formatTimelineDue(task) ? (
+                        <p className="project-timeline-field project-timeline-field--complete-by">
+                          <span className="project-timeline-field-label">Complete by</span>
+                          <strong>{formatTimelineDue(task)}</strong>
+                        </p>
+                      ) : (
+                        <p className="project-timeline-field project-timeline-field--complete-by">
+                          <span className="project-timeline-field-label">Complete by</span>
+                          <strong>—</strong>
+                        </p>
+                      )}
+                      <p className="project-timeline-field project-timeline-field--status">
+                        <span className="project-timeline-field-label">Status</span>
+                        <strong>{task.status}</strong>
+                      </p>
+                    </div>
+                    {(task.prerequisites || task.overdueNote) && (
+                      <div className="project-timeline-fields-row project-timeline-fields-row--notes">
+                        {task.prerequisites && (
+                          <p className="project-timeline-field project-timeline-field--prerequisites project-timeline-note">
+                            <span className="project-timeline-field-label">Pre-requisites</span>
+                            {task.prerequisites}
+                          </p>
+                        )}
+                        {task.overdueNote && (
+                          <p className="project-timeline-field project-timeline-field--overdue-note project-timeline-note">
+                            <span className="project-timeline-field-label">Reason</span>
+                            {task.overdueNote}
+                          </p>
+                        )}
+                      </div>
                     )}
                   </div>
                 ) : (
                   <div className="project-timeline-fields">
-                    <label>
-                      Activity
-                      <input
-                        value={task.activity}
-                        onChange={(e) => updateTask(index, { activity: e.target.value })}
-                        placeholder="e.g. Wireframe Design Delivery"
-                        required
-                      />
-                    </label>
-                    <label>
-                      Who
-                      <input
-                        value={task.assignee}
-                        onChange={(e) => updateTask(index, { assignee: e.target.value })}
-                        placeholder="e.g. DigiGro / Client"
-                      />
-                    </label>
-                    <label>
-                      Tentative date
-                      <input
-                        type="date"
-                        value={task.tentativeDate}
-                        onChange={(e) => updateTask(index, { tentativeDate: e.target.value })}
-                      />
-                    </label>
-                    <label>
-                      Revised date
-                      <input
-                        type="date"
-                        value={task.revisedDate}
-                        onChange={(e) => updateTask(index, { revisedDate: e.target.value })}
-                      />
-                    </label>
-                    <label>
-                      Complete by
-                      <input
-                        type="datetime-local"
-                        value={toDatetimeLocal(task.completeBy)}
-                        onChange={(e) =>
-                          updateTask(index, {
-                            completeBy: e.target.value ? new Date(e.target.value).toISOString() : "",
-                          })
-                        }
-                      />
-                    </label>
-                    <label>
-                      Status
-                      <select
-                        value={task.status}
-                        onChange={(e) => updateTask(index, { status: e.target.value })}
-                      >
-                        {TIMELINE_STATUS_OPTIONS.map((opt) => (
-                          <option key={opt} value={opt}>{opt}</option>
-                        ))}
-                      </select>
-                    </label>
-                    <label className="full-width-field">
-                      Pre-requisites / notes
-                      <textarea
-                        rows={2}
-                        value={task.prerequisites}
-                        onChange={(e) => updateTask(index, { prerequisites: e.target.value })}
-                        placeholder="Dependencies, feedback notes, blockers..."
-                      />
-                    </label>
-                    <label className="full-width-field">
-                      Reason / priority notes
-                      <textarea
-                        rows={2}
-                        value={task.overdueNote}
-                        onChange={(e) => updateTask(index, { overdueNote: e.target.value })}
-                        placeholder="Why this is priority or overdue..."
-                      />
-                    </label>
+                    <div className="project-timeline-fields-row project-timeline-fields-row--primary">
+                      <label className="project-timeline-field project-timeline-field--activity">
+                        <span className="project-timeline-field-label">Activity</span>
+                        <input
+                          className="project-timeline-field-input"
+                          value={task.activity}
+                          onChange={(e) => updateTask(index, { activity: e.target.value })}
+                          placeholder="e.g. Wireframe Design Delivery"
+                          required
+                        />
+                      </label>
+                      <label className="project-timeline-field project-timeline-field--assignee">
+                        <span className="project-timeline-field-label">Who</span>
+                        <input
+                          className="project-timeline-field-input"
+                          value={task.assignee}
+                          onChange={(e) => updateTask(index, { assignee: e.target.value })}
+                          placeholder="e.g. DigiGro / Client"
+                        />
+                      </label>
+                      <label className="project-timeline-field project-timeline-field--tentative">
+                        <span className="project-timeline-field-label">Tentative date</span>
+                        <input
+                          className="project-timeline-field-input project-timeline-field-input--date"
+                          type="date"
+                          value={task.tentativeDate}
+                          onChange={(e) => updateTask(index, { tentativeDate: e.target.value })}
+                        />
+                      </label>
+                    </div>
+
+                    <div className="project-timeline-fields-row project-timeline-fields-row--dates">
+                      <label className="project-timeline-field project-timeline-field--revised">
+                        <span className="project-timeline-field-label">Revised date</span>
+                        <input
+                          className="project-timeline-field-input project-timeline-field-input--date"
+                          type="date"
+                          value={task.revisedDate}
+                          onChange={(e) => updateTask(index, { revisedDate: e.target.value })}
+                        />
+                      </label>
+                      <label className="project-timeline-field project-timeline-field--complete-by">
+                        <span className="project-timeline-field-label">Complete by</span>
+                        <input
+                          className="project-timeline-field-input project-timeline-field-input--datetime"
+                          type="datetime-local"
+                          value={toDatetimeLocal(task.completeBy)}
+                          onChange={(e) =>
+                            updateTask(index, {
+                              completeBy: e.target.value ? new Date(e.target.value).toISOString() : "",
+                            })
+                          }
+                        />
+                      </label>
+                      <label className="project-timeline-field project-timeline-field--status">
+                        <span className="project-timeline-field-label">Status</span>
+                        <select
+                          className="project-timeline-field-input project-timeline-field-input--select"
+                          value={task.status}
+                          onChange={(e) => updateTask(index, { status: e.target.value })}
+                        >
+                          {TIMELINE_STATUS_OPTIONS.map((opt) => (
+                            <option key={opt} value={opt}>{opt}</option>
+                          ))}
+                        </select>
+                      </label>
+                    </div>
+
+                    <div className="project-timeline-fields-row project-timeline-fields-row--notes">
+                      <label className="project-timeline-field project-timeline-field--prerequisites">
+                        <span className="project-timeline-field-label">Pre-requisites / notes</span>
+                        <textarea
+                          className="project-timeline-field-input project-timeline-field-input--textarea"
+                          rows={2}
+                          value={task.prerequisites}
+                          onChange={(e) => updateTask(index, { prerequisites: e.target.value })}
+                          placeholder="Dependencies, feedback notes, blockers..."
+                        />
+                      </label>
+                      <label className="project-timeline-field project-timeline-field--overdue-note">
+                        <span className="project-timeline-field-label">Reason / priority notes</span>
+                        <textarea
+                          className="project-timeline-field-input project-timeline-field-input--textarea"
+                          rows={2}
+                          value={task.overdueNote}
+                          onChange={(e) => updateTask(index, { overdueNote: e.target.value })}
+                          placeholder="Why this is priority or overdue..."
+                        />
+                      </label>
+                    </div>
                   </div>
                 )}
               </div>

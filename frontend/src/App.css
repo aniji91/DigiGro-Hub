@@ -5626,7 +5626,9 @@
     grid-template-columns: 1fr;
   }
 
-  .project-timeline-fields {
+  .project-timeline-fields-row--primary,
+  .project-timeline-fields-row--dates,
+  .project-timeline-fields-row--notes {
     grid-template-columns: 1fr;
   }
 }
@@ -5732,44 +5734,89 @@
 }
 
 .project-timeline-fields {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 0.65rem 0.85rem;
-}
-
-.project-timeline-fields label {
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
-  font-size: 0.78rem;
-  color: var(--text-muted);
+  gap: 0.85rem;
 }
 
-.project-timeline-fields input,
-.project-timeline-fields select,
-.project-timeline-fields textarea {
+.project-timeline-fields-row {
+  display: grid;
+  gap: 0.75rem 1rem;
+  align-items: end;
+}
+
+.project-timeline-fields-row--primary {
+  grid-template-columns: minmax(0, 2fr) minmax(140px, 1fr) minmax(160px, 1fr);
+}
+
+.project-timeline-fields-row--dates {
+  grid-template-columns: repeat(3, minmax(160px, 1fr));
+}
+
+.project-timeline-fields-row--notes {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: stretch;
+}
+
+.project-timeline-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  min-width: 0;
+  margin: 0;
+}
+
+.project-timeline-field-label {
+  font-size: 0.76rem;
+  font-weight: 600;
+  color: #6b7280;
+  letter-spacing: 0.01em;
+}
+
+.project-timeline-field-input {
+  width: 100%;
   font-size: 0.85rem;
+  font-weight: 400;
+  color: #111827;
+}
+
+.project-timeline-field-input--textarea {
+  min-height: 72px;
+  resize: vertical;
+  line-height: 1.45;
+}
+
+.project-timeline-field-input--date,
+.project-timeline-field-input--datetime,
+.project-timeline-field-input--select {
+  min-height: 38px;
 }
 
 .project-timeline-readonly {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 0.5rem 0.85rem;
-  font-size: 0.82rem;
-}
-
-.project-timeline-readonly p {
-  margin: 0;
   display: flex;
   flex-direction: column;
-  gap: 0.15rem;
+  gap: 0.85rem;
 }
 
-.project-timeline-readonly span {
-  font-size: 0.72rem;
-  color: var(--text-muted);
+.project-timeline-readonly .project-timeline-field strong {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #111827;
+  line-height: 1.35;
 }
 
 .project-timeline-note {
-  grid-column: 1 / -1;
+  font-size: 0.82rem;
+  line-height: 1.45;
+  color: #374151;
+}
+
+@media (max-width: 1100px) {
+  .project-timeline-fields-row--primary {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .project-timeline-field--activity {
+    grid-column: 1 / -1;
+  }
 }
