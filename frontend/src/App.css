@@ -5331,6 +5331,74 @@
   gap: 0.5rem;
 }
 
+.pm-day-task {
+  border: 1px solid transparent;
+  border-radius: 8px;
+  padding: 0.15rem;
+}
+
+.pm-day-task--overdue {
+  border-color: #fca5a5;
+  background: #fef2f2;
+}
+
+.pm-overdue-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.12rem 0.4rem;
+  border-radius: 999px;
+  background: #fee2e2;
+  color: #b91c1c;
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.pm-task-due {
+  display: block;
+  margin-top: 0.25rem;
+  font-size: 0.72rem;
+  color: var(--text-muted);
+}
+
+.pm-task-due--overdue {
+  color: #b91c1c;
+  font-weight: 600;
+}
+
+.pm-task-overdue-note {
+  margin: 0.35rem 0 0;
+  padding: 0.35rem 0.45rem;
+  border-radius: 6px;
+  background: #fff1f2;
+  border: 1px solid #fecdd3;
+  font-size: 0.74rem;
+  line-height: 1.35;
+  color: #9f1239;
+}
+
+.pm-row-overdue td {
+  background: #fff5f5;
+}
+
+.pm-row-overdue .pm-col-project strong {
+  color: #b91c1c;
+}
+
+.pm-project-overdue-flag {
+  display: inline-block;
+  margin-left: 0.4rem;
+  padding: 0.1rem 0.45rem;
+  border-radius: 999px;
+  background: #fee2e2;
+  color: #b91c1c;
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  vertical-align: middle;
+}
+
 .pm-day-task p {
   margin: 0.25rem 0 0;
   font-size: 0.8rem;

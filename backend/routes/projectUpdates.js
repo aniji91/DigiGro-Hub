@@ -12,6 +12,13 @@ const READ_ALL_ROLES = new Set(["superadmin", "admin", "product_manager", "hr"])
 const POINT_TYPES = new Set(["discussion", "status"]);
 const TASK_STATUSES = new Set(["New", "Completed", "Carry forward"]);
 
+function normalizeDueAt(value) {
+  if (!value) return null;
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return null;
+  return date.toISOString();
+}
+
 function readUpdates() {
   return readData(FILE);
 }
@@ -74,7 +81,7 @@ router.get("/", (req, res) => {
 });
 
 router.post("/", async (req, res) => {
-  const { projectId, date, type, content, taskStatus } = req.body;
+  const { projectId, date, type, content, taskStatus, dueAt, overdueNote } = req.body;
 
   if (!projectId || !date || !type || !content?.trim()) {
     return res.status(400).json({ error: "Project, date, type, and content are required" });
@@ -108,6 +115,9 @@ router.post("/", async (req, res) => {
     type,
     content: content.trim(),
     taskStatus: type === "status" ? taskStatus : null,
+    dueAt: type === "status" ? normalizeDueAt(dueAt) : null,
+    overdueNote:
+      type === "status" ? (overdueNote || "").trim() || null : null,
     statusUpdatedAt: type === "status" ? now : null,
     authorId: req.user.id,
     authorName: req.user.name,
@@ -144,7 +154,7 @@ router.put("/:id", async (req, res) => {
     return res.status(403).json({ error: "You can only edit your own points" });
   }
 
-  const { date, type, content, taskStatus } = req.body;
+  const { date, type, content, taskStatus, dueAt, overdueNote } = req.body;
 
   if (type && !POINT_TYPES.has(type)) {
     return res.status(400).json({ error: "Type must be discussion or status" });
@@ -170,6 +180,18 @@ router.put("/:id", async (req, res) => {
     type: nextType,
     content: content !== undefined ? content.trim() : item.content,
     taskStatus: nextTaskStatus,
+    dueAt:
+      nextType === "status"
+        ? dueAt !== undefined
+          ? normalizeDueAt(dueAt)
+          : item.dueAt ?? null
+        : null,
+    overdueNote:
+      nextType === "status"
+        ? overdueNote !== undefined
+          ? (overdueNote || "").trim() || null
+          : item.overdueNote ?? null
+        : null,
     statusUpdatedAt:
       nextType === "status"
         ? statusChanged

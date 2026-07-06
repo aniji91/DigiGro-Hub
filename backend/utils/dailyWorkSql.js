@@ -40,6 +40,8 @@ function mapProjectUpdateRow(row) {
     type: row.update_type,
     content: row.content,
     taskStatus: row.task_status || null,
+    dueAt: row.due_at || null,
+    overdueNote: row.overdue_note || null,
     authorId: row.author_id ?? null,
     authorName: row.author_name || "",
     authorRole: row.author_role || null,
@@ -145,9 +147,9 @@ async function upsertProjectUpdateRow(item) {
   const pool = getPool();
   await pool.query(
     `INSERT INTO project_updates
-     (id, project_id, project_name, update_date, update_type, content, task_status,
-      author_id, author_name, author_role, created_at, updated_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+     (id, project_id, project_name, update_date, update_type, content, task_status, due_at,
+      overdue_note, author_id, author_name, author_role, created_at, updated_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
      ON DUPLICATE KEY UPDATE
        project_id = VALUES(project_id),
        project_name = VALUES(project_name),
@@ -155,6 +157,8 @@ async function upsertProjectUpdateRow(item) {
        update_type = VALUES(update_type),
        content = VALUES(content),
        task_status = VALUES(task_status),
+       due_at = VALUES(due_at),
+       overdue_note = VALUES(overdue_note),
        author_id = VALUES(author_id),
        author_name = VALUES(author_name),
        author_role = VALUES(author_role),
@@ -167,6 +171,8 @@ async function upsertProjectUpdateRow(item) {
       updateType,
       content,
       item.taskStatus || null,
+      toMysqlDatetime(item.dueAt),
+      item.overdueNote || null,
       item.authorId || null,
       item.authorName || null,
       item.authorRole || null,

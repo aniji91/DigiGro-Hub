@@ -88,6 +88,19 @@ async function restoreProjectsFromTableIfNeeded() {
 async function runDataMigrations() {
   if (!isMysqlEnabled()) return;
 
+  const pool = getPool();
+  const alterStatements = [
+    "ALTER TABLE project_updates ADD COLUMN due_at DATETIME NULL",
+    "ALTER TABLE project_updates ADD COLUMN overdue_note TEXT NULL",
+  ];
+  for (const statement of alterStatements) {
+    try {
+      await pool.query(statement);
+    } catch (err) {
+      if (err.code !== "ER_DUP_FIELDNAME") throw err;
+    }
+  }
+
   const migrations = cache.get("_migrations") || {};
 
   if (!migrations.cleared_demo_work_logs_v1) {

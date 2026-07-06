@@ -9,6 +9,13 @@ import Modal from "../components/Modal";
 const STATUS_DAYS = 4;
 const TASK_STATUS_OPTIONS = ["New", "Completed", "Carry forward"];
 const PROJECT_STATUS_OPTIONS = ["Planning", "In Progress", "On Hold", "Completed"];
+const EMPTY_TASK_FORM = {
+  content: "",
+  taskStatus: "New",
+  date: "",
+  dueAt: "",
+  overdueNote: "",
+};
 
 const today = () => new Date().toISOString().slice(0, 10);
 
@@ -61,6 +68,35 @@ function getStatusUpdatedAt(task) {
   return task.statusUpdatedAt || task.createdAt;
 }
 
+function toDatetimeLocal(value) {
+  if (!value) return "";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+  const pad = (n) => String(n).padStart(2, "0");
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+}
+
+function isTaskOverdue(task) {
+  if (!task?.dueAt || task.taskStatus === "Completed") return false;
+  return new Date() > new Date(task.dueAt);
+}
+
+function sortTasksByPriority(tasks) {
+  return [...tasks].sort((a, b) => {
+    const aOverdue = isTaskOverdue(a);
+    const bOverdue = isTaskOverdue(b);
+    if (aOverdue !== bOverdue) return aOverdue ? -1 : 1;
+    if (a.dueAt && b.dueAt) return new Date(a.dueAt) - new Date(b.dueAt);
+    return 0;
+  });
+}
+
+function projectHasOverdueTasks(projectId, projectUpdates) {
+  return projectUpdates.some(
+    (task) => task.type === "status" && task.projectId === projectId && isTaskOverdue(task)
+  );
+}
+
 function TaskStatusSelect({ task, onChange, disabled }) {
   return (
     <select
@@ -96,14 +132,21 @@ function ProjectStatusSelect({ project, onChange, disabled }) {
 }
 
 function TaskCard({ task, updatingTaskId, isSelected, onStatusChange, onEdit }) {
+  const overdue = isTaskOverdue(task);
+
   return (
-    <div className={`pm-day-task ${isSelected ? "pm-day-task--selected" : ""}`}>
+    <div
+      className={`pm-day-task ${isSelected ? "pm-day-task--selected" : ""} ${
+        overdue ? "pm-day-task--overdue" : ""
+      }`}
+    >
       <div className="pm-day-task-head">
         <TaskStatusSelect
           task={task}
           onChange={onStatusChange}
           disabled={updatingTaskId === task.id}
         />
+        {overdue && <span className="pm-overdue-badge">Overdue</span>}
         <button
           type="button"
           className="icon-action pm-task-edit-btn"
@@ -115,6 +158,16 @@ function TaskCard({ task, updatingTaskId, isSelected, onStatusChange, onEdit }) 
         </button>
       </div>
       <p>{task.content}</p>
+      {task.dueAt && (
+        <span className={`pm-task-due ${overdue ? "pm-task-due--overdue" : ""}`}>
+          Complete by {formatDateTime(task.dueAt)}
+        </span>
+      )}
+      {task.overdueNote && (
+        <p className="pm-task-overdue-note">
+          <strong>Reason:</strong> {task.overdueNote}
+        </p>
+      )}
       <span className="pm-task-status-time">
         Status updated {formatDateTime(getStatusUpdatedAt(task))}
       </span>
@@ -228,7 +281,7 @@ export default function PmProjectBoard() {
   }, [boardProjects, employeeById]);
 
   const filteredProjects = useMemo(() => {
-    return boardProjects.filter((project) => {
+    const list = boardProjects.filter((project) => {
       const ownerMatch =
         ownerFilter === "all" ||
         (ownerFilter === "unassigned" && !project.ownerId) ||
@@ -242,7 +295,14 @@ export default function PmProjectBoard() {
 
       return ownerMatch && teamMatch;
     });
-  }, [boardProjects, ownerFilter, teamFilter]);
+
+    return list.sort((a, b) => {
+      const aOverdue = projectHasOverdueTasks(a.id, updates);
+      const bOverdue = projectHasOverdueTasks(b.id, updates);
+      if (aOverdue !== bOverdue) return aOverdue ? -1 : 1;
+      return a.name.localeCompare(b.name);
+    });
+  }, [boardProjects, ownerFilter, teamFilter, updates]);
 
   const addingProject = useMemo(
     () => boardProjects.find((p) => p.id === addingForProject) || null,
@@ -270,7 +330,9 @@ export default function PmProjectBoard() {
 
   function getTasksForDate(projectId, date) {
     const projectUpdates = updatesByProject.get(projectId) || [];
-    return projectUpdates.filter((u) => u.type === "status" && u.date === date);
+    return sortTasksByPriority(
+      projectUpdates.filter((u) => u.type === "status" && u.date === date)
+    );
   }
 
   function getAllStatusUpdates(projectId) {
@@ -316,7 +378,11 @@ export default function PmProjectBoard() {
   }, []);
 
   function getTaskForm(projectId) {
-    return taskForms[projectId] || { content: "", taskStatus: "New", date: today() };
+    return {
+      ...EMPTY_TASK_FORM,
+      date: today(),
+      ...(taskForms[projectId] || {}),
+    };
   }
 
   function setTaskForm(projectId, patch) {
@@ -328,7 +394,7 @@ export default function PmProjectBoard() {
 
   function openAddTask(projectId) {
     setAddingForProject(projectId);
-    setTaskForm(projectId, { content: "", taskStatus: "New", date: today() });
+    setTaskForm(projectId, { ...EMPTY_TASK_FORM, date: today() });
     setEditingTaskId(null);
   }
 
@@ -374,7 +440,7 @@ export default function PmProjectBoard() {
   }
 
   function getEditTaskForm(taskId) {
-    return editTaskForms[taskId] || { content: "", taskStatus: "New", date: today() };
+    return { ...EMPTY_TASK_FORM, date: today(), ...(editTaskForms[taskId] || {}) };
   }
 
   function setEditTaskForm(taskId, patch) {
@@ -390,6 +456,8 @@ export default function PmProjectBoard() {
       content: task.content,
       taskStatus: task.taskStatus || "New",
       date: task.date,
+      dueAt: toDatetimeLocal(task.dueAt),
+      overdueNote: task.overdueNote || "",
     });
     setAddingForProject(null);
   }
@@ -410,6 +478,8 @@ export default function PmProjectBoard() {
         type: "status",
         content: form.content.trim(),
         taskStatus: form.taskStatus,
+        dueAt: form.dueAt ? new Date(form.dueAt).toISOString() : null,
+        overdueNote: form.overdueNote.trim() || null,
       });
       setUpdates((prev) => prev.map((u) => (u.id === updated.id ? updated : u)));
       setEditingTaskId(null);
@@ -449,9 +519,11 @@ export default function PmProjectBoard() {
         type: "status",
         content: form.content.trim(),
         taskStatus: form.taskStatus,
+        dueAt: form.dueAt ? new Date(form.dueAt).toISOString() : null,
+        overdueNote: form.overdueNote.trim() || null,
       });
       setUpdates((prev) => [created, ...prev]);
-      setTaskForm(project.id, { content: "", taskStatus: "New", date: today() });
+      setTaskForm(project.id, { ...EMPTY_TASK_FORM, date: today() });
       setAddingForProject(null);
     } catch (err) {
       setError(err.message);
@@ -547,6 +619,15 @@ export default function PmProjectBoard() {
                   ))}
                 </select>
               </label>
+              <label className="pm-field">
+                <span className="pm-field__label">Complete by</span>
+                <input
+                  type="datetime-local"
+                  className="pm-field__control pm-field__control--date"
+                  value={getTaskForm(addingProject.id).dueAt}
+                  onChange={(e) => setTaskForm(addingProject.id, { dueAt: e.target.value })}
+                />
+              </label>
               <label className="pm-field pm-field--grow">
                 <span className="pm-field__label">Task / work description</span>
                 <textarea
@@ -557,6 +638,16 @@ export default function PmProjectBoard() {
                   placeholder="What was done today, blockers, next steps..."
                   required
                   autoFocus
+                />
+              </label>
+              <label className="pm-field pm-field--grow">
+                <span className="pm-field__label">Reason / notes</span>
+                <textarea
+                  className="pm-field__control pm-field__control--textarea"
+                  rows={2}
+                  value={getTaskForm(addingProject.id).overdueNote}
+                  onChange={(e) => setTaskForm(addingProject.id, { overdueNote: e.target.value })}
+                  placeholder="Why this is priority, blocker, or overdue context..."
                 />
               </label>
             </div>
@@ -614,6 +705,15 @@ export default function PmProjectBoard() {
                   ))}
                 </select>
               </label>
+              <label className="pm-field">
+                <span className="pm-field__label">Complete by</span>
+                <input
+                  type="datetime-local"
+                  className="pm-field__control pm-field__control--date"
+                  value={getEditTaskForm(editingTask.id).dueAt}
+                  onChange={(e) => setEditTaskForm(editingTask.id, { dueAt: e.target.value })}
+                />
+              </label>
               <label className="pm-field pm-field--grow">
                 <span className="pm-field__label">Task / work description</span>
                 <textarea
@@ -624,6 +724,16 @@ export default function PmProjectBoard() {
                   placeholder="What was done, blockers, next steps..."
                   required
                   autoFocus
+                />
+              </label>
+              <label className="pm-field pm-field--grow">
+                <span className="pm-field__label">Reason / notes</span>
+                <textarea
+                  className="pm-field__control pm-field__control--textarea"
+                  rows={2}
+                  value={getEditTaskForm(editingTask.id).overdueNote}
+                  onChange={(e) => setEditTaskForm(editingTask.id, { overdueNote: e.target.value })}
+                  placeholder="Why this is priority, blocker, or overdue context..."
                 />
               </label>
             </div>
@@ -662,11 +772,18 @@ export default function PmProjectBoard() {
                 const allStatus = getAllStatusUpdates(project.id);
                 const team = getProjectTeam(project, employeeById);
 
+                const hasOverdue = projectHasOverdueTasks(project.id, updates);
+
                 return (
                   <Fragment key={project.id}>
-                    <tr className={isExpanded ? "pm-row-active" : ""}>
+                    <tr
+                      className={`${isExpanded ? "pm-row-active" : ""} ${
+                        hasOverdue ? "pm-row-overdue" : ""
+                      }`}
+                    >
                       <td className="pm-col-project">
                         <strong>{project.name}</strong>
+                        {hasOverdue && <span className="pm-project-overdue-flag">Priority</span>}
                         {project.clientName ? (
                           <span className="pm-board-client">{project.clientName}</span>
                         ) : null}
@@ -785,7 +902,7 @@ export default function PmProjectBoard() {
                                   <div key={date} className="pm-detail-day">
                                     <h5>{formatFullDate(date)}</h5>
                                     <ul>
-                                      {items.map((item) => (
+                                      {sortTasksByPriority(items).map((item) => (
                                         <li key={item.id}>
                                           <TaskCard
                                             task={item}
