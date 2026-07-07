@@ -163,6 +163,8 @@ CREATE TABLE IF NOT EXISTS project_updates (
   task_status VARCHAR(50) NULL,
   due_at DATETIME NULL,
   overdue_note TEXT NULL,
+  assigned_employee_id INT NULL,
+  assigned_employee_name VARCHAR(200) NULL,
   author_id INT NULL,
   author_name VARCHAR(200) NULL,
   author_role VARCHAR(50) NULL,

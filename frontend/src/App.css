@@ -5386,6 +5386,63 @@
   font-weight: 600;
 }
 
+.pm-task-assignee {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  margin-top: 0.25rem;
+  font-size: 0.72rem;
+  color: var(--text-muted);
+}
+
+.pm-task-assignee strong {
+  color: #374151;
+  font-weight: 600;
+}
+
+.pm-task-assignee-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.pm-task-assignee-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.4rem 0.7rem 0.4rem 0.45rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 999px;
+  background: #fff;
+  color: #374151;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 0.15s, background-color 0.15s, box-shadow 0.15s;
+}
+
+.pm-task-assignee-chip:hover {
+  border-color: #cbd5e1;
+  background: #f9fafb;
+}
+
+.pm-task-assignee-chip--active {
+  border-color: var(--brand);
+  background: #fff5f2;
+  box-shadow: 0 0 0 2px rgba(239, 68, 35, 0.12);
+}
+
+.pm-task-assignee-chip-name {
+  max-width: 12rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pm-field--assignee {
+  grid-column: 1 / -1;
+}
+
 .pm-task-overdue-note {
   margin: 0.35rem 0 0;
   padding: 0.35rem 0.45rem;

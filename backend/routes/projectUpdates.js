@@ -6,6 +6,7 @@ const { upsertProjectUpdateRow, deleteProjectUpdateRow } = require("../utils/dai
 const router = express.Router();
 const FILE = dataPath("project_updates.json");
 const PROJECTS_FILE = dataPath("projects.json");
+const EMPLOYEES_FILE = dataPath("employees.json");
 
 const MANAGE_ROLES = new Set(["superadmin", "admin", "product_manager"]);
 const READ_ALL_ROLES = new Set(["superadmin", "admin", "product_manager", "hr"]);
@@ -29,6 +30,32 @@ function writeUpdates(updates) {
 
 function readProjects() {
   return readData(PROJECTS_FILE);
+}
+
+function readEmployees() {
+  return readData(EMPLOYEES_FILE);
+}
+
+function normalizeAssignedEmployee(project, assignedEmployeeId) {
+  if (assignedEmployeeId === null || assignedEmployeeId === undefined || assignedEmployeeId === "") {
+    return { assignedEmployeeId: null, assignedEmployeeName: null };
+  }
+
+  const id = Number(assignedEmployeeId);
+  if (!Number.isFinite(id)) {
+    return null;
+  }
+
+  const teamIds = (project.assignedEmployeeIds || []).map(Number);
+  if (!teamIds.includes(id)) {
+    return null;
+  }
+
+  const employee = readEmployees().find((item) => Number(item.id) === id);
+  return {
+    assignedEmployeeId: id,
+    assignedEmployeeName: employee?.name || `Employee ${id}`,
+  };
 }
 
 function canAccessProject(user, projectId) {
@@ -81,7 +108,7 @@ router.get("/", (req, res) => {
 });
 
 router.post("/", async (req, res) => {
-  const { projectId, date, type, content, taskStatus, dueAt, overdueNote } = req.body;
+  const { projectId, date, type, content, taskStatus, dueAt, overdueNote, assignedEmployeeId } = req.body;
 
   if (!projectId || !date || !type || !content?.trim()) {
     return res.status(400).json({ error: "Project, date, type, and content are required" });
@@ -105,6 +132,15 @@ router.post("/", async (req, res) => {
     return res.status(404).json({ error: "Project not found" });
   }
 
+  let assignment = { assignedEmployeeId: null, assignedEmployeeName: null };
+  if (type === "status" && assignedEmployeeId !== undefined) {
+    const normalized = normalizeAssignedEmployee(project, assignedEmployeeId);
+    if (normalized === null) {
+      return res.status(400).json({ error: "Assigned team member must belong to this project" });
+    }
+    assignment = normalized;
+  }
+
   const updates = readUpdates();
   const now = new Date().toISOString();
   const created = {
@@ -118,6 +154,8 @@ router.post("/", async (req, res) => {
     dueAt: type === "status" ? normalizeDueAt(dueAt) : null,
     overdueNote:
       type === "status" ? (overdueNote || "").trim() || null : null,
+    assignedEmployeeId: type === "status" ? assignment.assignedEmployeeId : null,
+    assignedEmployeeName: type === "status" ? assignment.assignedEmployeeName : null,
     statusUpdatedAt: type === "status" ? now : null,
     authorId: req.user.id,
     authorName: req.user.name,
@@ -154,7 +192,7 @@ router.put("/:id", async (req, res) => {
     return res.status(403).json({ error: "You can only edit your own points" });
   }
 
-  const { date, type, content, taskStatus, dueAt, overdueNote } = req.body;
+  const { date, type, content, taskStatus, dueAt, overdueNote, assignedEmployeeId } = req.body;
 
   if (type && !POINT_TYPES.has(type)) {
     return res.status(400).json({ error: "Type must be discussion or status" });
@@ -174,6 +212,24 @@ router.put("/:id", async (req, res) => {
     nextType === "status" && taskStatus !== undefined && taskStatus !== item.taskStatus;
   const now = new Date().toISOString();
 
+  let nextAssignment = {
+    assignedEmployeeId: item.assignedEmployeeId ?? null,
+    assignedEmployeeName: item.assignedEmployeeName ?? null,
+  };
+  if (nextType === "status" && assignedEmployeeId !== undefined) {
+    const project = readProjects().find((p) => p.id === item.projectId);
+    if (!project) {
+      return res.status(404).json({ error: "Project not found" });
+    }
+    const normalized = normalizeAssignedEmployee(project, assignedEmployeeId);
+    if (normalized === null) {
+      return res.status(400).json({ error: "Assigned team member must belong to this project" });
+    }
+    nextAssignment = normalized;
+  } else if (nextType !== "status") {
+    nextAssignment = { assignedEmployeeId: null, assignedEmployeeName: null };
+  }
+
   updates[index] = {
     ...item,
     date: date ?? item.date,
@@ -192,6 +248,8 @@ router.put("/:id", async (req, res) => {
           ? (overdueNote || "").trim() || null
           : item.overdueNote ?? null
         : null,
+    assignedEmployeeId: nextType === "status" ? nextAssignment.assignedEmployeeId : null,
+    assignedEmployeeName: nextType === "status" ? nextAssignment.assignedEmployeeName : null,
     statusUpdatedAt:
       nextType === "status"
         ? statusChanged

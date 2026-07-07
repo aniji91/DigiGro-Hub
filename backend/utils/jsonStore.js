@@ -96,6 +96,8 @@ async function runDataMigrations() {
     "ALTER TABLE project_updates ADD COLUMN overdue_note TEXT NULL",
     "ALTER TABLE projects ADD COLUMN timeline_tasks JSON NULL",
     "ALTER TABLE projects ADD COLUMN is_hidden TINYINT(1) NOT NULL DEFAULT 0",
+    "ALTER TABLE project_updates ADD COLUMN assigned_employee_id INT NULL",
+    "ALTER TABLE project_updates ADD COLUMN assigned_employee_name VARCHAR(200) NULL",
   ];
   for (const statement of alterStatements) {
     try {

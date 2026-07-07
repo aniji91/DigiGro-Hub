@@ -303,8 +303,8 @@ async function syncNormalizedTables(connection) {
       await connection.query(
         `INSERT INTO project_updates
          (id, project_id, project_name, update_date, update_type, content, task_status, due_at,
-          overdue_note, author_id, author_name, author_role, created_at, updated_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          overdue_note, assigned_employee_id, assigned_employee_name, author_id, author_name, author_role, created_at, updated_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
           item.id,
           item.projectId,
@@ -315,6 +315,8 @@ async function syncNormalizedTables(connection) {
           item.taskStatus || null,
           item.dueAt || null,
           item.overdueNote || null,
+          item.assignedEmployeeId || null,
+          item.assignedEmployeeName || null,
           item.authorId || null,
           item.authorName || null,
           item.authorRole || null,

@@ -15,6 +15,7 @@ const EMPTY_TASK_FORM = {
   date: "",
   dueAt: "",
   overdueNote: "",
+  assignedEmployeeId: "",
 };
 
 const today = () => new Date().toISOString().slice(0, 10);
@@ -131,6 +132,35 @@ function ProjectStatusSelect({ project, onChange, disabled }) {
   );
 }
 
+function TaskAssigneeField({ team, value, onChange }) {
+  return (
+    <div className="pm-field pm-field--assignee pm-field--grow">
+      <span className="pm-field__label">Assigned to</span>
+      {team.length === 0 ? (
+        <p className="muted pm-field-hint">No team members assigned to this project.</p>
+      ) : (
+        <div className="pm-task-assignee-options">
+          {team.map((emp) => {
+            const active = String(value) === String(emp.id);
+            return (
+              <button
+                key={emp.id}
+                type="button"
+                className={`pm-task-assignee-chip ${active ? "pm-task-assignee-chip--active" : ""}`}
+                onClick={() => onChange(active ? "" : String(emp.id))}
+                title={active ? `Unassign ${emp.name}` : `Assign to ${emp.name}`}
+              >
+                <span className="pm-team-avatar">{initials(emp.name)}</span>
+                <span className="pm-task-assignee-chip-name">{emp.name}</span>
+              </button>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function TaskCard({ task, updatingTaskId, isSelected, onStatusChange, onEdit }) {
   const overdue = isTaskOverdue(task);
 
@@ -158,6 +188,11 @@ function TaskCard({ task, updatingTaskId, isSelected, onStatusChange, onEdit }) 
         </button>
       </div>
       <p>{task.content}</p>
+      {task.assignedEmployeeName && (
+        <span className="pm-task-assignee">
+          Assigned to <strong>{task.assignedEmployeeName}</strong>
+        </span>
+      )}
       {task.dueAt && (
         <span className={`pm-task-due ${overdue ? "pm-task-due--overdue" : ""}`}>
           Complete by {formatDateTime(task.dueAt)}
@@ -458,6 +493,7 @@ export default function PmProjectBoard() {
       date: task.date,
       dueAt: toDatetimeLocal(task.dueAt),
       overdueNote: task.overdueNote || "",
+      assignedEmployeeId: task.assignedEmployeeId ? String(task.assignedEmployeeId) : "",
     });
     setAddingForProject(null);
   }
@@ -480,6 +516,7 @@ export default function PmProjectBoard() {
         taskStatus: form.taskStatus,
         dueAt: form.dueAt ? new Date(form.dueAt).toISOString() : null,
         overdueNote: form.overdueNote.trim() || null,
+        assignedEmployeeId: form.assignedEmployeeId ? Number(form.assignedEmployeeId) : null,
       });
       setUpdates((prev) => prev.map((u) => (u.id === updated.id ? updated : u)));
       setEditingTaskId(null);
@@ -521,6 +558,7 @@ export default function PmProjectBoard() {
         taskStatus: form.taskStatus,
         dueAt: form.dueAt ? new Date(form.dueAt).toISOString() : null,
         overdueNote: form.overdueNote.trim() || null,
+        assignedEmployeeId: form.assignedEmployeeId ? Number(form.assignedEmployeeId) : null,
       });
       setUpdates((prev) => [created, ...prev]);
       setTaskForm(project.id, { ...EMPTY_TASK_FORM, date: today() });
@@ -628,6 +666,13 @@ export default function PmProjectBoard() {
                   onChange={(e) => setTaskForm(addingProject.id, { dueAt: e.target.value })}
                 />
               </label>
+              <TaskAssigneeField
+                team={getProjectTeam(addingProject, employeeById)}
+                value={getTaskForm(addingProject.id).assignedEmployeeId}
+                onChange={(assignedEmployeeId) =>
+                  setTaskForm(addingProject.id, { assignedEmployeeId })
+                }
+              />
               <label className="pm-field pm-field--grow">
                 <span className="pm-field__label">Task / work description</span>
                 <textarea
@@ -714,6 +759,13 @@ export default function PmProjectBoard() {
                   onChange={(e) => setEditTaskForm(editingTask.id, { dueAt: e.target.value })}
                 />
               </label>
+              <TaskAssigneeField
+                team={getProjectTeam(editingProject, employeeById)}
+                value={getEditTaskForm(editingTask.id).assignedEmployeeId}
+                onChange={(assignedEmployeeId) =>
+                  setEditTaskForm(editingTask.id, { assignedEmployeeId })
+                }
+              />
               <label className="pm-field pm-field--grow">
                 <span className="pm-field__label">Task / work description</span>
                 <textarea

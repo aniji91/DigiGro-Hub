@@ -42,6 +42,8 @@ function mapProjectUpdateRow(row) {
     taskStatus: row.task_status || null,
     dueAt: row.due_at || null,
     overdueNote: row.overdue_note || null,
+    assignedEmployeeId: row.assigned_employee_id ?? null,
+    assignedEmployeeName: row.assigned_employee_name || null,
     authorId: row.author_id ?? null,
     authorName: row.author_name || "",
     authorRole: row.author_role || null,
@@ -148,8 +150,8 @@ async function upsertProjectUpdateRow(item) {
   await pool.query(
     `INSERT INTO project_updates
      (id, project_id, project_name, update_date, update_type, content, task_status, due_at,
-      overdue_note, author_id, author_name, author_role, created_at, updated_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      overdue_note, assigned_employee_id, assigned_employee_name, author_id, author_name, author_role, created_at, updated_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
      ON DUPLICATE KEY UPDATE
        project_id = VALUES(project_id),
        project_name = VALUES(project_name),
@@ -159,6 +161,8 @@ async function upsertProjectUpdateRow(item) {
        task_status = VALUES(task_status),
        due_at = VALUES(due_at),
        overdue_note = VALUES(overdue_note),
+       assigned_employee_id = VALUES(assigned_employee_id),
+       assigned_employee_name = VALUES(assigned_employee_name),
        author_id = VALUES(author_id),
        author_name = VALUES(author_name),
        author_role = VALUES(author_role),
@@ -173,6 +177,8 @@ async function upsertProjectUpdateRow(item) {
       item.taskStatus || null,
       toMysqlDatetime(item.dueAt),
       item.overdueNote || null,
+      item.assignedEmployeeId || null,
+      item.assignedEmployeeName || null,
       item.authorId || null,
       item.authorName || null,
       item.authorRole || null,
