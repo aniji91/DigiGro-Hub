@@ -10,6 +10,7 @@ import { ProjectEnvironmentDetails } from "../components/ProjectEnvironmentDetai
 import { ProjectExternalCrmDetails } from "../components/ProjectExternalCrmDetails";
 import ProjectOnboardingPanel from "../components/ProjectOnboardingPanel";
 import { filterActiveProjects } from "../utils/projectVisibility";
+import { filterVisibleTasks } from "../utils/taskVisibility";
 
 const today = () => new Date().toISOString().slice(0, 10);
 
@@ -65,13 +66,15 @@ export default function ViewProjects() {
   const visibleProjects = useMemo(() => filterActiveProjects(projects), [projects]);
   const employeeMap = Object.fromEntries(employees.map((e) => [e.id, e.name]));
 
-  const filteredUpdates = useMemo(() => {
-    if (filterType === "all") return updates;
-    return updates.filter((u) => u.type === filterType);
-  }, [updates, filterType]);
+  const visibleUpdates = useMemo(() => filterVisibleTasks(updates), [updates]);
 
-  const discussionCount = updates.filter((u) => u.type === "discussion").length;
-  const taskCount = updates.filter((u) => u.type === "status").length;
+  const filteredUpdates = useMemo(() => {
+    if (filterType === "all") return visibleUpdates;
+    return visibleUpdates.filter((u) => u.type === filterType);
+  }, [visibleUpdates, filterType]);
+
+  const discussionCount = visibleUpdates.filter((u) => u.type === "discussion").length;
+  const taskCount = visibleUpdates.filter((u) => u.type === "status").length;
   const teamIds = selectedProject?.assignedEmployeeIds || [];
 
   const teamMembers = useMemo(

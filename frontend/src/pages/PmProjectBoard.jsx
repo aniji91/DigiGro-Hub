@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState, Fragment } from "react";
 import { Link } from "react-router-dom";
-import { Plus, ChevronDown, ChevronUp, ExternalLink, Pencil } from "lucide-react";
+import { Plus, ChevronDown, ChevronUp, ExternalLink, Eye, EyeOff, Pencil } from "lucide-react";
 import { fetchProjectUpdates, projectUpdatesApi, projectsApi } from "../api/crmApi";
 import { fetchEmployees } from "../api/employeeApi";
 import PageHeader from "../components/PageHeader";
@@ -94,7 +94,11 @@ function sortTasksByPriority(tasks) {
 
 function projectHasOverdueTasks(projectId, projectUpdates) {
   return projectUpdates.some(
-    (task) => task.type === "status" && task.projectId === projectId && isTaskOverdue(task)
+    (task) =>
+      task.type === "status" &&
+      task.projectId === projectId &&
+      !task.isHidden &&
+      isTaskOverdue(task)
   );
 }
 
@@ -161,14 +165,14 @@ function TaskAssigneeField({ team, value, onChange }) {
   );
 }
 
-function TaskCard({ task, updatingTaskId, isSelected, onStatusChange, onEdit }) {
+function TaskCard({ task, updatingTaskId, hidingTaskId, isSelected, onStatusChange, onEdit, onHide, onUnhide, hiddenView = false }) {
   const overdue = isTaskOverdue(task);
 
   return (
     <div
       className={`pm-day-task ${isSelected ? "pm-day-task--selected" : ""} ${
         overdue ? "pm-day-task--overdue" : ""
-      }`}
+      } ${hiddenView ? "pm-day-task--hidden" : ""}`}
     >
       <div className="pm-day-task-head">
         <TaskStatusSelect
@@ -186,6 +190,29 @@ function TaskCard({ task, updatingTaskId, isSelected, onStatusChange, onEdit }) 
         >
           <Pencil size={13} />
         </button>
+        {hiddenView ? (
+          <button
+            type="button"
+            className="icon-action unhide pm-task-hide-btn"
+            onClick={() => onUnhide(task)}
+            disabled={hidingTaskId === task.id}
+            title="Restore task"
+            aria-label={`Restore task: ${task.content}`}
+          >
+            <Eye size={13} />
+          </button>
+        ) : (
+          <button
+            type="button"
+            className="icon-action hide pm-task-hide-btn"
+            onClick={() => onHide(task)}
+            disabled={hidingTaskId === task.id}
+            title="Hide task"
+            aria-label={`Hide task: ${task.content}`}
+          >
+            <EyeOff size={13} />
+          </button>
+        )}
       </div>
       <p>{task.content}</p>
       {task.assignedEmployeeName && (
@@ -290,6 +317,8 @@ export default function PmProjectBoard() {
   const [editingTaskId, setEditingTaskId] = useState(null);
   const [editTaskForms, setEditTaskForms] = useState({});
   const [savingTaskEditId, setSavingTaskEditId] = useState(null);
+  const [expandedTaskListMode, setExpandedTaskListMode] = useState("active");
+  const [hidingTaskId, setHidingTaskId] = useState(null);
 
   const statusDays = useMemo(() => getLastNDays(STATUS_DAYS), []);
   const employeeById = Object.fromEntries(employees.map((e) => [e.id, e]));
@@ -366,18 +395,22 @@ export default function PmProjectBoard() {
   function getTasksForDate(projectId, date) {
     const projectUpdates = updatesByProject.get(projectId) || [];
     return sortTasksByPriority(
-      projectUpdates.filter((u) => u.type === "status" && u.date === date)
+      projectUpdates.filter((u) => u.type === "status" && u.date === date && !u.isHidden)
     );
   }
 
-  function getAllStatusUpdates(projectId) {
+  function getAllStatusUpdates(projectId, { hiddenOnly = false } = {}) {
     const projectUpdates = updatesByProject.get(projectId) || [];
     return projectUpdates
-      .filter((u) => u.type === "status")
+      .filter((u) => u.type === "status" && Boolean(u.isHidden) === hiddenOnly)
       .sort((a, b) => {
         if (a.date !== b.date) return b.date.localeCompare(a.date);
         return new Date(b.createdAt) - new Date(a.createdAt);
       });
+  }
+
+  function getHiddenTaskCount(projectId) {
+    return getAllStatusUpdates(projectId, { hiddenOnly: true }).length;
   }
 
   function groupedByDate(items) {
@@ -438,7 +471,18 @@ export default function PmProjectBoard() {
   }
 
   function toggleExpand(projectId) {
-    setExpandedProjectId((prev) => (prev === projectId ? null : projectId));
+    setExpandedProjectId((prev) => {
+      const next = prev === projectId ? null : projectId;
+      if (next) setExpandedTaskListMode("active");
+      return next;
+    });
+    setAddingForProject(null);
+    setEditingTaskId(null);
+  }
+
+  function openHiddenTasks(projectId) {
+    setExpandedProjectId(projectId);
+    setExpandedTaskListMode("hidden");
     setAddingForProject(null);
     setEditingTaskId(null);
   }
@@ -539,6 +583,37 @@ export default function PmProjectBoard() {
       setError(err.message);
     } finally {
       setUpdatingTaskId(null);
+    }
+  }
+
+  async function handleHideTask(task) {
+    const preview = task.content.length > 60 ? `${task.content.slice(0, 60)}…` : task.content;
+    if (!window.confirm(`Hide this task?\n\n"${preview}"\n\nYou can restore it later from Hidden tasks.`)) return;
+
+    try {
+      setHidingTaskId(task.id);
+      setError("");
+      const updated = await projectUpdatesApi.update(task.id, { isHidden: true });
+      setUpdates((prev) => prev.map((u) => (u.id === updated.id ? updated : u)));
+      if (editingTaskId === task.id) setEditingTaskId(null);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setHidingTaskId(null);
+    }
+  }
+
+  async function handleUnhideTask(task) {
+    try {
+      setHidingTaskId(task.id);
+      setError("");
+      const updated = await projectUpdatesApi.update(task.id, { isHidden: false });
+      setUpdates((prev) => prev.map((u) => (u.id === updated.id ? updated : u)));
+      if (editingTaskId === task.id) setEditingTaskId(null);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setHidingTaskId(null);
     }
   }
 
@@ -821,8 +896,11 @@ export default function PmProjectBoard() {
             <tbody>
               {filteredProjects.map((project) => {
                 const isExpanded = expandedProjectId === project.id;
-                const allStatus = getAllStatusUpdates(project.id);
+                const activeTasks = getAllStatusUpdates(project.id);
+                const hiddenTasks = getAllStatusUpdates(project.id, { hiddenOnly: true });
+                const detailTasks = expandedTaskListMode === "hidden" ? hiddenTasks : activeTasks;
                 const team = getProjectTeam(project, employeeById);
+                const hiddenCount = hiddenTasks.length;
 
                 const hasOverdue = projectHasOverdueTasks(project.id, updates);
 
@@ -900,9 +978,12 @@ export default function PmProjectBoard() {
                                     key={task.id}
                                     task={task}
                                     updatingTaskId={updatingTaskId}
+                                    hidingTaskId={hidingTaskId}
                                     isSelected={editingTaskId === task.id}
                                     onStatusChange={handleTaskStatusUpdate}
                                     onEdit={openEditTask}
+                                    onHide={handleHideTask}
+                                    onUnhide={handleUnhideTask}
                                   />
                                 ))}
                               </ul>
@@ -930,6 +1011,16 @@ export default function PmProjectBoard() {
                               <><ChevronDown size={14} /> View all</>
                             )}
                           </button>
+                          {hiddenCount > 0 && (
+                            <button
+                              type="button"
+                              className={`btn-secondary btn-sm ${isExpanded && expandedTaskListMode === "hidden" ? "active" : ""}`}
+                              onClick={() => openHiddenTasks(project.id)}
+                              title="View hidden tasks"
+                            >
+                              <EyeOff size={14} /> Hidden ({hiddenCount})
+                            </button>
+                          )}
                           <Link
                             to={`/view-projects/${project.id}`}
                             className="btn-secondary btn-sm pm-link-btn"
@@ -945,12 +1036,40 @@ export default function PmProjectBoard() {
                       <tr className="pm-row-detail">
                         <td colSpan={5 + STATUS_DAYS}>
                           <div className="pm-detail-panel">
-                            <h4>All daily tasks — {project.name}</h4>
-                            {allStatus.length === 0 ? (
-                              <p className="muted">No daily tasks recorded yet.</p>
+                            <div className="pm-detail-panel-head">
+                              <h4>
+                                {expandedTaskListMode === "hidden"
+                                  ? `Hidden tasks — ${project.name}`
+                                  : `All daily tasks — ${project.name}`}
+                              </h4>
+                              <div className="pm-detail-tabs">
+                                <button
+                                  type="button"
+                                  className={`pm-detail-tab ${expandedTaskListMode === "active" ? "pm-detail-tab--active" : ""}`}
+                                  onClick={() => setExpandedTaskListMode("active")}
+                                >
+                                  Active
+                                  <span className="pm-detail-tab-count">{activeTasks.length}</span>
+                                </button>
+                                <button
+                                  type="button"
+                                  className={`pm-detail-tab ${expandedTaskListMode === "hidden" ? "pm-detail-tab--active" : ""}`}
+                                  onClick={() => setExpandedTaskListMode("hidden")}
+                                >
+                                  Hidden
+                                  <span className="pm-detail-tab-count">{hiddenCount}</span>
+                                </button>
+                              </div>
+                            </div>
+                            {detailTasks.length === 0 ? (
+                              <p className="muted">
+                                {expandedTaskListMode === "hidden"
+                                  ? "No hidden tasks. Hide tasks you no longer need on the board to see them here."
+                                  : "No daily tasks recorded yet."}
+                              </p>
                             ) : (
                               <div className="pm-detail-timeline">
-                                {groupedByDate(allStatus).map(([date, items]) => (
+                                {groupedByDate(detailTasks).map(([date, items]) => (
                                   <div key={date} className="pm-detail-day">
                                     <h5>{formatFullDate(date)}</h5>
                                     <ul>
@@ -959,9 +1078,13 @@ export default function PmProjectBoard() {
                                           <TaskCard
                                             task={item}
                                             updatingTaskId={updatingTaskId}
+                                            hidingTaskId={hidingTaskId}
                                             isSelected={editingTaskId === item.id}
                                             onStatusChange={handleTaskStatusUpdate}
                                             onEdit={openEditTask}
+                                            onHide={handleHideTask}
+                                            onUnhide={handleUnhideTask}
+                                            hiddenView={expandedTaskListMode === "hidden"}
                                           />
                                           <span className="celebration-meta">
                                             {item.authorName} · added{" "}

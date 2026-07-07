@@ -5657,6 +5657,75 @@
   margin-bottom: 0.75rem;
 }
 
+.pm-detail-panel {
+  padding: 1rem 1.25rem 1.25rem;
+}
+
+.pm-detail-panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.85rem;
+}
+
+.pm-detail-panel-head h4 {
+  margin: 0;
+  font-size: 0.95rem;
+}
+
+.pm-detail-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.pm-detail-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.35rem 0.7rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 999px;
+  background: #fff;
+  color: var(--text-muted);
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.pm-detail-tab--active {
+  border-color: var(--brand);
+  background: #fff5f2;
+  color: var(--brand);
+}
+
+.pm-detail-tab-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.2rem;
+  height: 1.2rem;
+  padding: 0 0.3rem;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.06);
+  font-size: 0.68rem;
+}
+
+.pm-detail-tab--active .pm-detail-tab-count {
+  background: rgba(239, 68, 35, 0.12);
+}
+
+.pm-day-task--hidden {
+  opacity: 0.92;
+  border-style: dashed;
+}
+
+.pm-task-hide-btn {
+  flex-shrink: 0;
+}
+
 .pm-detail-timeline {
   display: flex;
   flex-direction: column;

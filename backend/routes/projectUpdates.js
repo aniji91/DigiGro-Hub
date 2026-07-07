@@ -156,6 +156,7 @@ router.post("/", async (req, res) => {
       type === "status" ? (overdueNote || "").trim() || null : null,
     assignedEmployeeId: type === "status" ? assignment.assignedEmployeeId : null,
     assignedEmployeeName: type === "status" ? assignment.assignedEmployeeName : null,
+    isHidden: false,
     statusUpdatedAt: type === "status" ? now : null,
     authorId: req.user.id,
     authorName: req.user.name,
@@ -192,7 +193,7 @@ router.put("/:id", async (req, res) => {
     return res.status(403).json({ error: "You can only edit your own points" });
   }
 
-  const { date, type, content, taskStatus, dueAt, overdueNote, assignedEmployeeId } = req.body;
+  const { date, type, content, taskStatus, dueAt, overdueNote, assignedEmployeeId, isHidden } = req.body;
 
   if (type && !POINT_TYPES.has(type)) {
     return res.status(400).json({ error: "Type must be discussion or status" });
@@ -250,6 +251,7 @@ router.put("/:id", async (req, res) => {
         : null,
     assignedEmployeeId: nextType === "status" ? nextAssignment.assignedEmployeeId : null,
     assignedEmployeeName: nextType === "status" ? nextAssignment.assignedEmployeeName : null,
+    isHidden: isHidden !== undefined ? Boolean(isHidden) : Boolean(item.isHidden),
     statusUpdatedAt:
       nextType === "status"
         ? statusChanged

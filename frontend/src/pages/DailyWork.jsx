@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { fetchDailyWork, fetchMyProjects, projectsApi, workLogsApi } from "../api/crmApi";
 import { filterActiveProjects } from "../utils/projectVisibility";
+import { filterVisibleTasks } from "../utils/taskVisibility";
 import DataTable from "../components/DataTable";
 import Modal from "../components/Modal";
 import PageHeader from "../components/PageHeader";
@@ -96,7 +97,7 @@ export default function DailyWork() {
   const [filterDate, setFilterDate] = useState("");
 
   const feed = useMemo(
-    () => normalizeFeed(workLogs, projectUpdates),
+    () => normalizeFeed(workLogs, filterVisibleTasks(projectUpdates)),
     [workLogs, projectUpdates]
   );
 

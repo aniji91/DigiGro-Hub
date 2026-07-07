@@ -165,6 +165,7 @@ CREATE TABLE IF NOT EXISTS project_updates (
   overdue_note TEXT NULL,
   assigned_employee_id INT NULL,
   assigned_employee_name VARCHAR(200) NULL,
+  is_hidden TINYINT(1) NOT NULL DEFAULT 0,
   author_id INT NULL,
   author_name VARCHAR(200) NULL,
   author_role VARCHAR(50) NULL,
