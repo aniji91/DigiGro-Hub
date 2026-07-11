@@ -1,13 +1,7 @@
-import { getAuthHeaders } from "./authApi";
+import { getAuthHeaders, handleResponse } from "./authApi";
 import { API_ROOT } from "./config";
 
 const API_BASE = API_ROOT;
-
-async function handleResponse(response) {
-  const data = await response.json().catch(() => ({}));
-  if (!response.ok) throw new Error(data.error || "Request failed");
-  return data;
-}
 
 export async function fetchChannels() {
   const response = await fetch(`${API_BASE}/channels`, { headers: getAuthHeaders() });

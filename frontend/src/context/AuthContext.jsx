@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState, createContext, useContext } from "react";
 import { ROLE_LABELS as FALLBACK_LABELS } from "../config/menuConfig";
+import { setUnauthorizedHandler } from "../api/authApi";
 import { fetchMyRolePermissions, fetchRoleLabels } from "../api/roleApi";
 import { canCreate, canDelete, canEdit, canView } from "../config/permissions";
 
@@ -28,6 +29,21 @@ export function AuthProvider({ children }) {
   const [modulePermissions, setModulePermissions] = useState(null);
   const [roleLabels, setRoleLabels] = useState(FALLBACK_LABELS);
 
+  function logout() {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    setUser(null);
+    setModulePermissions(null);
+  }
+
+  useEffect(() => {
+    setUnauthorizedHandler(() => {
+      setUser(null);
+      setModulePermissions(null);
+    });
+    return () => setUnauthorizedHandler(null);
+  }, []);
+
   useEffect(() => {
     if (!user) {
       setModulePermissions(null);
@@ -45,13 +61,6 @@ export function AuthProvider({ children }) {
     localStorage.setItem("token", token);
     localStorage.setItem("user", JSON.stringify(loggedInUser));
     setUser(loggedInUser);
-  }
-
-  function logout() {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
-    setUser(null);
-    setModulePermissions(null);
   }
 
   function updateUser(partial) {

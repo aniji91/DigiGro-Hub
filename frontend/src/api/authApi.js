@@ -1,8 +1,22 @@
 import { API_ROOT } from "./config";
 
-async function handleResponse(response) {
+let onUnauthorized = null;
+
+/** Register a callback (e.g. AuthContext logout) for 401 responses. */
+export function setUnauthorizedHandler(handler) {
+  onUnauthorized = handler;
+}
+
+export async function handleResponse(response) {
   const data = await response.json().catch(() => ({}));
-  if (!response.ok) throw new Error(data.error || "Request failed");
+  if (!response.ok) {
+    if (response.status === 401) {
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+      onUnauthorized?.();
+    }
+    throw new Error(data.error || "Request failed");
+  }
   return data;
 }
 
