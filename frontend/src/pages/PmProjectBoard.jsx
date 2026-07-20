@@ -165,6 +165,34 @@ function TaskAssigneeField({ team, value, onChange }) {
   );
 }
 
+const URL_IN_TEXT_RE = /(https?:\/\/[^\s<]+)/gi;
+
+function linkifyText(text) {
+  if (!text) return null;
+  const parts = String(text).split(URL_IN_TEXT_RE);
+  return parts.map((part, index) => {
+    if (/^https?:\/\//i.test(part)) {
+      const href = part.replace(/[),.;!?]+$/g, "");
+      const trailing = part.slice(href.length);
+      return (
+        <Fragment key={`link-${index}`}>
+          <a
+            href={href}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="pm-task-link"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {href}
+          </a>
+          {trailing}
+        </Fragment>
+      );
+    }
+    return <Fragment key={`text-${index}`}>{part}</Fragment>;
+  });
+}
+
 function TaskCard({ task, updatingTaskId, hidingTaskId, isSelected, onStatusChange, onEdit, onHide, onUnhide, hiddenView = false }) {
   const overdue = isTaskOverdue(task);
 
@@ -214,7 +242,7 @@ function TaskCard({ task, updatingTaskId, hidingTaskId, isSelected, onStatusChan
           </button>
         )}
       </div>
-      <p>{task.content}</p>
+      <p className="pm-day-task-content">{linkifyText(task.content)}</p>
       {task.assignedEmployeeName && (
         <span className="pm-task-assignee">
           Assigned to <strong>{task.assignedEmployeeName}</strong>
@@ -227,7 +255,7 @@ function TaskCard({ task, updatingTaskId, hidingTaskId, isSelected, onStatusChan
       )}
       {task.overdueNote && (
         <p className="pm-task-overdue-note">
-          <strong>Reason:</strong> {task.overdueNote}
+          <strong>Reason:</strong> {linkifyText(task.overdueNote)}
         </p>
       )}
       <span className="pm-task-status-time">
@@ -974,17 +1002,18 @@ export default function PmProjectBoard() {
                             ) : (
                               <ul className="pm-day-tasks">
                                 {tasks.map((task) => (
-                                  <TaskCard
-                                    key={task.id}
-                                    task={task}
-                                    updatingTaskId={updatingTaskId}
-                                    hidingTaskId={hidingTaskId}
-                                    isSelected={editingTaskId === task.id}
-                                    onStatusChange={handleTaskStatusUpdate}
-                                    onEdit={openEditTask}
-                                    onHide={handleHideTask}
-                                    onUnhide={handleUnhideTask}
-                                  />
+                                  <li key={task.id}>
+                                    <TaskCard
+                                      task={task}
+                                      updatingTaskId={updatingTaskId}
+                                      hidingTaskId={hidingTaskId}
+                                      isSelected={editingTaskId === task.id}
+                                      onStatusChange={handleTaskStatusUpdate}
+                                      onEdit={openEditTask}
+                                      onHide={handleHideTask}
+                                      onUnhide={handleUnhideTask}
+                                    />
+                                  </li>
                                 ))}
                               </ul>
                             )}

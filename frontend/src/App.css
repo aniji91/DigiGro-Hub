@@ -5158,6 +5158,10 @@
   text-align: left;
 }
 
+.pm-board-table td.pm-col-day {
+  overflow: hidden;
+}
+
 .pm-board-table thead th {
   background: #f9fafb;
   font-size: 0.75rem;
@@ -5307,7 +5311,9 @@
 
 .pm-col-day {
   width: 11%;
-  min-width: 110px;
+  min-width: 140px;
+  max-width: 180px;
+  overflow: hidden;
 }
 
 .pm-col-actions {
@@ -5348,12 +5354,26 @@
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
+  max-height: 11.5rem;
+  overflow-x: hidden;
+  overflow-y: auto;
+  padding-right: 0.15rem;
+  min-width: 0;
+}
+
+.pm-day-tasks > li {
+  list-style: none;
+  min-width: 0;
+  max-width: 100%;
 }
 
 .pm-day-task {
   border: 1px solid transparent;
   border-radius: 8px;
   padding: 0.15rem;
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
 }
 
 .pm-day-task--overdue {
@@ -5452,6 +5472,9 @@
   font-size: 0.74rem;
   line-height: 1.35;
   color: #9f1239;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  max-width: 100%;
 }
 
 .pm-row-overdue td {
@@ -5475,11 +5498,27 @@
   vertical-align: middle;
 }
 
-.pm-day-task p {
+.pm-day-task p,
+.pm-day-task-content {
   margin: 0.25rem 0 0;
   font-size: 0.8rem;
   line-height: 1.35;
   color: #374151;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  max-width: 100%;
+}
+
+.pm-task-link {
+  color: var(--brand, #ea580c);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  overflow-wrap: anywhere;
+  word-break: break-all;
+}
+
+.pm-task-link:hover {
+  color: #c2410c;
 }
 
 .pm-row-actions {
@@ -5751,11 +5790,16 @@
   border: 1px solid #e5e7eb;
   border-radius: 8px;
   padding: 0.65rem 0.75rem;
+  overflow: hidden;
+  min-width: 0;
 }
 
-.pm-detail-day li p {
+.pm-detail-day li p,
+.pm-detail-day .pm-day-task-content {
   margin: 0.35rem 0 0.25rem;
   font-size: 0.85rem;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 @media (max-width: 900px) {
