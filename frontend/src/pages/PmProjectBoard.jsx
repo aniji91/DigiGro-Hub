@@ -1004,9 +1004,6 @@ export default function PmProjectBoard() {
             <thead>
               <tr>
                 <th className="pm-col-project">Project</th>
-                <th className="pm-col-owner">Owner</th>
-                <th className="pm-col-team">Team</th>
-                <th className="pm-col-status">Status</th>
                 {statusDays.map((day) => (
                   <th key={day} className="pm-col-day">{formatDayHeader(day)}</th>
                 ))}
@@ -1028,58 +1025,67 @@ export default function PmProjectBoard() {
                       }`}
                     >
                       <td className="pm-col-project">
-                        <strong>{project.name}</strong>
-                        {hasOverdue && <span className="pm-project-overdue-flag">Priority</span>}
-                        {project.clientName ? (
-                          <span className="pm-board-client">{project.clientName}</span>
-                        ) : null}
-                        <ProjectEnvLinks project={project} />
-                      </td>
-                      <td className="pm-col-owner">
-                        <label className="pm-owner-select">
-                          <span className="sr-only">Assign owner for {project.name}</span>
-                          <select
-                            value={project.ownerId ? String(project.ownerId) : ""}
-                            onChange={(e) => handleOwnerChange(project, e.target.value)}
-                            disabled={savingOwnerId === project.id}
-                            className={`pm-field__control pm-field__control--select pm-field__control--compact ${!project.ownerId ? "pm-field__control--placeholder" : ""}`}
-                          >
-                            <option value="">Assign owner…</option>
-                            {employees.map((emp) => (
-                              <option key={emp.id} value={emp.id}>
-                                {emp.name}
-                              </option>
-                            ))}
-                          </select>
-                        </label>
-                      </td>
-                      <td className="pm-col-team">
-                        {team.length === 0 ? (
-                          <span className="muted pm-team-empty">No team assigned</span>
-                        ) : (
-                          <ul className="pm-team-chips">
-                            {team.map((member) => (
-                              <li
-                                key={member.id}
-                                className={`pm-team-chip ${teamFilter === String(member.id) ? "pm-team-chip--active" : ""}`}
-                                title={[member.position, member.email?.trim()].filter(Boolean).join(" · ")}
-                              >
-                                <span className="pm-team-avatar">{initials(member.name)}</span>
-                                <span className="pm-team-chip-text">
-                                  <strong>{member.name}</strong>
-                                  <span>{member.position || member.department || "—"}</span>
-                                </span>
-                              </li>
-                            ))}
-                          </ul>
-                        )}
-                      </td>
-                      <td className="pm-col-status">
-                        <ProjectStatusSelect
-                          project={project}
-                          onChange={handleProjectStatusChange}
-                          disabled={savingProjectStatusId === project.id}
-                        />
+                        <div className="pm-project-cell">
+                          <div className="pm-project-cell-head">
+                            <strong>{project.name}</strong>
+                            {hasOverdue && <span className="pm-project-overdue-flag">Priority</span>}
+                            {project.clientName ? (
+                              <span className="pm-board-client">{project.clientName}</span>
+                            ) : null}
+                            <ProjectEnvLinks project={project} />
+                          </div>
+                          <div className="pm-project-cell-meta">
+                            <div className="pm-project-meta-item">
+                              <span className="pm-project-meta-label">Owner</span>
+                              <label className="pm-owner-select">
+                                <span className="sr-only">Assign owner for {project.name}</span>
+                                <select
+                                  value={project.ownerId ? String(project.ownerId) : ""}
+                                  onChange={(e) => handleOwnerChange(project, e.target.value)}
+                                  disabled={savingOwnerId === project.id}
+                                  className={`pm-field__control pm-field__control--select pm-field__control--compact ${!project.ownerId ? "pm-field__control--placeholder" : ""}`}
+                                >
+                                  <option value="">Assign owner…</option>
+                                  {employees.map((emp) => (
+                                    <option key={emp.id} value={emp.id}>
+                                      {emp.name}
+                                    </option>
+                                  ))}
+                                </select>
+                              </label>
+                            </div>
+                            <div className="pm-project-meta-item">
+                              <span className="pm-project-meta-label">Status</span>
+                              <ProjectStatusSelect
+                                project={project}
+                                onChange={handleProjectStatusChange}
+                                disabled={savingProjectStatusId === project.id}
+                              />
+                            </div>
+                            <div className="pm-project-meta-item pm-project-meta-item--team">
+                              <span className="pm-project-meta-label">Team</span>
+                              {team.length === 0 ? (
+                                <span className="muted pm-team-empty">No team assigned</span>
+                              ) : (
+                                <ul className="pm-team-chips pm-team-chips--compact">
+                                  {team.map((member) => (
+                                    <li
+                                      key={member.id}
+                                      className={`pm-team-chip ${teamFilter === String(member.id) ? "pm-team-chip--active" : ""}`}
+                                      title={[member.position, member.email?.trim()].filter(Boolean).join(" · ")}
+                                    >
+                                      <span className="pm-team-avatar">{initials(member.name)}</span>
+                                      <span className="pm-team-chip-text">
+                                        <strong>{member.name}</strong>
+                                        <span>{member.position || member.department || "—"}</span>
+                                      </span>
+                                    </li>
+                                  ))}
+                                </ul>
+                              )}
+                            </div>
+                          </div>
+                        </div>
                       </td>
                       {statusDays.map((day) => {
                         const tasks = getTasksForDate(project.id, day);
