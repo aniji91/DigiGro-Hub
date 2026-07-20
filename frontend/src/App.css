@@ -2291,6 +2291,10 @@
   backdrop-filter: blur(4px);
 }
 
+.modal-overlay ~ .modal-overlay {
+  z-index: 1100;
+}
+
 .modal-panel {
   background: var(--surface);
   border-radius: var(--radius);
@@ -5688,16 +5692,28 @@
 
 .pm-detail-panel {
   padding: 1rem 1.25rem 1.25rem;
-  border-top: 1px dashed #e5e7eb;
+}
+
+.pm-detail-panel--modal {
+  padding: 0;
+  border-top: none;
+}
+
+.pm-detail-panel--modal .pm-detail-timeline {
+  max-height: min(60vh, 520px);
+  overflow-y: auto;
+  padding-right: 0.25rem;
+}
+
+.pm-detail-panel--modal .pm-day-task-content,
+.pm-detail-panel--modal .pm-task-overdue-note {
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .pm-detail-panel h4 {
   font-size: 0.92rem;
   margin-bottom: 0.75rem;
-}
-
-.pm-detail-panel {
-  padding: 1rem 1.25rem 1.25rem;
 }
 
 .pm-detail-panel-head {

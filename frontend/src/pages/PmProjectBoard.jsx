@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState, Fragment } from "react";
 import { Link } from "react-router-dom";
-import { Plus, ChevronDown, ChevronUp, ExternalLink, Eye, EyeOff, Pencil } from "lucide-react";
+import { Plus, List, ExternalLink, Eye, EyeOff, Pencil } from "lucide-react";
 import { fetchProjectUpdates, projectUpdatesApi, projectsApi } from "../api/crmApi";
 import { fetchEmployees } from "../api/employeeApi";
 import PageHeader from "../components/PageHeader";
@@ -401,6 +401,14 @@ export default function PmProjectBoard() {
     [boardProjects, addingForProject]
   );
 
+  const detailProject = useMemo(
+    () =>
+      boardProjects.find((p) => p.id === expandedProjectId) ||
+      projects.find((p) => p.id === expandedProjectId) ||
+      null,
+    [boardProjects, projects, expandedProjectId]
+  );
+
   const editingTask = useMemo(
     () => (editingTaskId ? updates.find((u) => u.id === editingTaskId) || null : null),
     [editingTaskId, updates]
@@ -436,6 +444,12 @@ export default function PmProjectBoard() {
         return new Date(b.createdAt) - new Date(a.createdAt);
       });
   }
+
+  const detailActiveTasks = detailProject ? getAllStatusUpdates(detailProject.id) : [];
+  const detailHiddenTasks = detailProject
+    ? getAllStatusUpdates(detailProject.id, { hiddenOnly: true })
+    : [];
+  const detailTasks = expandedTaskListMode === "hidden" ? detailHiddenTasks : detailActiveTasks;
 
   function getHiddenTaskCount(projectId) {
     return getAllStatusUpdates(projectId, { hiddenOnly: true }).length;
@@ -498,21 +512,19 @@ export default function PmProjectBoard() {
     setAddingForProject(null);
   }
 
-  function toggleExpand(projectId) {
-    setExpandedProjectId((prev) => {
-      const next = prev === projectId ? null : projectId;
-      if (next) setExpandedTaskListMode("active");
-      return next;
-    });
+  function openTaskDetail(projectId, mode = "active") {
+    setExpandedProjectId(projectId);
+    setExpandedTaskListMode(mode);
     setAddingForProject(null);
-    setEditingTaskId(null);
+  }
+
+  function closeTaskDetail() {
+    setExpandedProjectId(null);
+    setExpandedTaskListMode("active");
   }
 
   function openHiddenTasks(projectId) {
-    setExpandedProjectId(projectId);
-    setExpandedTaskListMode("hidden");
-    setAddingForProject(null);
-    setEditingTaskId(null);
+    openTaskDetail(projectId, "hidden");
   }
 
   async function handleOwnerChange(project, ownerId) {
@@ -812,6 +824,86 @@ export default function PmProjectBoard() {
         </Modal>
       )}
 
+      {detailProject && (
+        <Modal
+          title={
+            expandedTaskListMode === "hidden"
+              ? `Hidden tasks — ${detailProject.name}`
+              : `Task details — ${detailProject.name}`
+          }
+          onClose={closeTaskDetail}
+          size="xl"
+        >
+          <div className="pm-detail-panel pm-detail-panel--modal">
+            {detailProject.clientName && (
+              <p className="pm-task-modal-subtitle muted">{detailProject.clientName}</p>
+            )}
+            <div className="pm-detail-panel-head">
+              <div className="pm-detail-tabs">
+                <button
+                  type="button"
+                  className={`pm-detail-tab ${expandedTaskListMode === "active" ? "pm-detail-tab--active" : ""}`}
+                  onClick={() => setExpandedTaskListMode("active")}
+                >
+                  Active
+                  <span className="pm-detail-tab-count">{detailActiveTasks.length}</span>
+                </button>
+                <button
+                  type="button"
+                  className={`pm-detail-tab ${expandedTaskListMode === "hidden" ? "pm-detail-tab--active" : ""}`}
+                  onClick={() => setExpandedTaskListMode("hidden")}
+                >
+                  Hidden
+                  <span className="pm-detail-tab-count">{detailHiddenTasks.length}</span>
+                </button>
+              </div>
+            </div>
+            {detailTasks.length === 0 ? (
+              <p className="muted">
+                {expandedTaskListMode === "hidden"
+                  ? "No hidden tasks. Hide tasks you no longer need on the board to see them here."
+                  : "No daily tasks recorded yet."}
+              </p>
+            ) : (
+              <div className="pm-detail-timeline">
+                {groupedByDate(detailTasks).map(([date, items]) => (
+                  <div key={date} className="pm-detail-day">
+                    <h5>{formatFullDate(date)}</h5>
+                    <ul>
+                      {sortTasksByPriority(items).map((item) => (
+                        <li key={item.id}>
+                          <TaskCard
+                            task={item}
+                            updatingTaskId={updatingTaskId}
+                            hidingTaskId={hidingTaskId}
+                            isSelected={editingTaskId === item.id}
+                            onStatusChange={handleTaskStatusUpdate}
+                            onEdit={openEditTask}
+                            onHide={handleHideTask}
+                            onUnhide={handleUnhideTask}
+                            hiddenView={expandedTaskListMode === "hidden"}
+                          />
+                          <span className="celebration-meta">
+                            {item.authorName} · added{" "}
+                            {new Date(item.createdAt).toLocaleTimeString("en-US", {
+                              hour: "numeric",
+                              minute: "2-digit",
+                            })}
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ))}
+              </div>
+            )}
+            <Link to={`/view-projects/${detailProject.id}`} className="panel-link">
+              Open full project view →
+            </Link>
+          </div>
+        </Modal>
+      )}
+
       {editingTask && (
         <Modal
           title={`Edit daily task — ${editingProject?.name || editingTask.projectName || "Project"}`}
@@ -923,19 +1015,15 @@ export default function PmProjectBoard() {
             </thead>
             <tbody>
               {filteredProjects.map((project) => {
-                const isExpanded = expandedProjectId === project.id;
-                const activeTasks = getAllStatusUpdates(project.id);
-                const hiddenTasks = getAllStatusUpdates(project.id, { hiddenOnly: true });
-                const detailTasks = expandedTaskListMode === "hidden" ? hiddenTasks : activeTasks;
+                const isDetailOpen = expandedProjectId === project.id;
+                const hiddenCount = getAllStatusUpdates(project.id, { hiddenOnly: true }).length;
                 const team = getProjectTeam(project, employeeById);
-                const hiddenCount = hiddenTasks.length;
-
                 const hasOverdue = projectHasOverdueTasks(project.id, updates);
 
                 return (
                   <Fragment key={project.id}>
                     <tr
-                      className={`${isExpanded ? "pm-row-active" : ""} ${
+                      className={`${isDetailOpen ? "pm-row-active" : ""} ${
                         hasOverdue ? "pm-row-overdue" : ""
                       }`}
                     >
@@ -1031,19 +1119,16 @@ export default function PmProjectBoard() {
                           </button>
                           <button
                             type="button"
-                            className="btn-secondary btn-sm"
-                            onClick={() => toggleExpand(project.id)}
+                            className={`btn-secondary btn-sm ${isDetailOpen ? "active" : ""}`}
+                            onClick={() => openTaskDetail(project.id, "active")}
+                            title="View full task details"
                           >
-                            {isExpanded ? (
-                              <><ChevronUp size={14} /> Hide</>
-                            ) : (
-                              <><ChevronDown size={14} /> View all</>
-                            )}
+                            <List size={14} /> View detail
                           </button>
                           {hiddenCount > 0 && (
                             <button
                               type="button"
-                              className={`btn-secondary btn-sm ${isExpanded && expandedTaskListMode === "hidden" ? "active" : ""}`}
+                              className={`btn-secondary btn-sm ${isDetailOpen && expandedTaskListMode === "hidden" ? "active" : ""}`}
                               onClick={() => openHiddenTasks(project.id)}
                               title="View hidden tasks"
                             >
@@ -1060,82 +1145,6 @@ export default function PmProjectBoard() {
                         </div>
                       </td>
                     </tr>
-
-                    {isExpanded && (
-                      <tr className="pm-row-detail">
-                        <td colSpan={5 + STATUS_DAYS}>
-                          <div className="pm-detail-panel">
-                            <div className="pm-detail-panel-head">
-                              <h4>
-                                {expandedTaskListMode === "hidden"
-                                  ? `Hidden tasks — ${project.name}`
-                                  : `All daily tasks — ${project.name}`}
-                              </h4>
-                              <div className="pm-detail-tabs">
-                                <button
-                                  type="button"
-                                  className={`pm-detail-tab ${expandedTaskListMode === "active" ? "pm-detail-tab--active" : ""}`}
-                                  onClick={() => setExpandedTaskListMode("active")}
-                                >
-                                  Active
-                                  <span className="pm-detail-tab-count">{activeTasks.length}</span>
-                                </button>
-                                <button
-                                  type="button"
-                                  className={`pm-detail-tab ${expandedTaskListMode === "hidden" ? "pm-detail-tab--active" : ""}`}
-                                  onClick={() => setExpandedTaskListMode("hidden")}
-                                >
-                                  Hidden
-                                  <span className="pm-detail-tab-count">{hiddenCount}</span>
-                                </button>
-                              </div>
-                            </div>
-                            {detailTasks.length === 0 ? (
-                              <p className="muted">
-                                {expandedTaskListMode === "hidden"
-                                  ? "No hidden tasks. Hide tasks you no longer need on the board to see them here."
-                                  : "No daily tasks recorded yet."}
-                              </p>
-                            ) : (
-                              <div className="pm-detail-timeline">
-                                {groupedByDate(detailTasks).map(([date, items]) => (
-                                  <div key={date} className="pm-detail-day">
-                                    <h5>{formatFullDate(date)}</h5>
-                                    <ul>
-                                      {sortTasksByPriority(items).map((item) => (
-                                        <li key={item.id}>
-                                          <TaskCard
-                                            task={item}
-                                            updatingTaskId={updatingTaskId}
-                                            hidingTaskId={hidingTaskId}
-                                            isSelected={editingTaskId === item.id}
-                                            onStatusChange={handleTaskStatusUpdate}
-                                            onEdit={openEditTask}
-                                            onHide={handleHideTask}
-                                            onUnhide={handleUnhideTask}
-                                            hiddenView={expandedTaskListMode === "hidden"}
-                                          />
-                                          <span className="celebration-meta">
-                                            {item.authorName} · added{" "}
-                                            {new Date(item.createdAt).toLocaleTimeString("en-US", {
-                                              hour: "numeric",
-                                              minute: "2-digit",
-                                            })}
-                                          </span>
-                                        </li>
-                                      ))}
-                                    </ul>
-                                  </div>
-                                ))}
-                              </div>
-                            )}
-                            <Link to={`/view-projects/${project.id}`} className="panel-link">
-                              Open full project view →
-                            </Link>
-                          </div>
-                        </td>
-                      </tr>
-                    )}
                   </Fragment>
                 );
               })}
