@@ -77,9 +77,29 @@ function toDatetimeLocal(value) {
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
 }
 
+function isTaskIncomplete(task) {
+  return Boolean(task) && task.taskStatus !== "Completed" && !task.isHidden;
+}
+
 function isTaskOverdue(task) {
-  if (!task?.dueAt || task.taskStatus === "Completed") return false;
-  return new Date() > new Date(task.dueAt);
+  if (!isTaskIncomplete(task)) return false;
+  if (task.dueAt) return new Date() > new Date(task.dueAt);
+  // Incomplete tasks from a past date are treated as overdue so they stay visible
+  return Boolean(task.date && task.date < today());
+}
+
+function isCarriedForwardTask(task, displayDate = today()) {
+  return isTaskIncomplete(task) && Boolean(task.date) && task.date < displayDate;
+}
+
+function needsCarryForwardStatus(task) {
+  return (
+    isTaskIncomplete(task) &&
+    task.type === "status" &&
+    Boolean(task.date) &&
+    task.date < today() &&
+    task.taskStatus !== "Carry forward"
+  );
 }
 
 function sortTasksByPriority(tasks) {
@@ -88,6 +108,7 @@ function sortTasksByPriority(tasks) {
     const bOverdue = isTaskOverdue(b);
     if (aOverdue !== bOverdue) return aOverdue ? -1 : 1;
     if (a.dueAt && b.dueAt) return new Date(a.dueAt) - new Date(b.dueAt);
+    if (a.date !== b.date) return (a.date || "").localeCompare(b.date || "");
     return 0;
   });
 }
@@ -193,22 +214,36 @@ function linkifyText(text) {
   });
 }
 
-function TaskCard({ task, updatingTaskId, hidingTaskId, isSelected, onStatusChange, onEdit, onHide, onUnhide, hiddenView = false }) {
+function TaskCard({
+  task,
+  displayDate,
+  updatingTaskId,
+  hidingTaskId,
+  isSelected,
+  onStatusChange,
+  onEdit,
+  onHide,
+  onUnhide,
+  hiddenView = false,
+}) {
   const overdue = isTaskOverdue(task);
+  const carried = displayDate ? isCarriedForwardTask(task, displayDate) : isCarriedForwardTask(task);
+  const effectiveStatus = carried && task.taskStatus === "New" ? "Carry forward" : task.taskStatus;
 
   return (
     <div
       className={`pm-day-task ${isSelected ? "pm-day-task--selected" : ""} ${
         overdue ? "pm-day-task--overdue" : ""
-      } ${hiddenView ? "pm-day-task--hidden" : ""}`}
+      } ${carried ? "pm-day-task--carried" : ""} ${hiddenView ? "pm-day-task--hidden" : ""}`}
     >
       <div className="pm-day-task-head">
         <TaskStatusSelect
-          task={task}
+          task={{ ...task, taskStatus: effectiveStatus }}
           onChange={onStatusChange}
           disabled={updatingTaskId === task.id}
         />
         {overdue && <span className="pm-overdue-badge">Overdue</span>}
+        {carried && !overdue && <span className="pm-carry-badge">Carry forward</span>}
         <button
           type="button"
           className="icon-action pm-task-edit-btn"
@@ -242,6 +277,11 @@ function TaskCard({ task, updatingTaskId, hidingTaskId, isSelected, onStatusChan
           </button>
         )}
       </div>
+      {carried && (
+        <span className="pm-task-carried-from">
+          Carried from {formatDayHeader(task.date).replace(" (Today)", "")}
+        </span>
+      )}
       <p className="pm-day-task-content">{linkifyText(task.content)}</p>
       {task.assignedEmployeeName && (
         <span className="pm-task-assignee">
@@ -430,8 +470,23 @@ export default function PmProjectBoard() {
 
   function getTasksForDate(projectId, date) {
     const projectUpdates = updatesByProject.get(projectId) || [];
+    const todayStr = today();
+
     return sortTasksByPriority(
-      projectUpdates.filter((u) => u.type === "status" && u.date === date && !u.isHidden)
+      projectUpdates.filter((u) => {
+        if (u.type !== "status" || u.isHidden) return false;
+
+        // Completed tasks stay on their original date only
+        if (u.taskStatus === "Completed") return u.date === date;
+
+        // Incomplete tasks: show on original date
+        if (u.date === date) return true;
+
+        // Auto carry forward: incomplete older tasks also appear on Today
+        if (date === todayStr && u.date < todayStr) return true;
+
+        return false;
+      })
     );
   }
 
@@ -475,12 +530,33 @@ export default function PmProjectBoard() {
       ]);
       setProjects(projectData);
       setEmployees(employeeData);
-      setUpdates(updateData);
+
+      const carried = await autoCarryForwardIncompleteTasks(updateData);
+      setUpdates(carried);
     } catch (err) {
       setError(err.message);
     } finally {
       setLoading(false);
     }
+  }
+
+  async function autoCarryForwardIncompleteTasks(list) {
+    const toCarry = list.filter(needsCarryForwardStatus);
+    if (toCarry.length === 0) return list;
+
+    const results = await Promise.allSettled(
+      toCarry.map((task) => projectUpdatesApi.update(task.id, { taskStatus: "Carry forward" }))
+    );
+
+    const updatedById = new Map();
+    results.forEach((result) => {
+      if (result.status === "fulfilled" && result.value?.id) {
+        updatedById.set(result.value.id, result.value);
+      }
+    });
+
+    if (updatedById.size === 0) return list;
+    return list.map((task) => updatedById.get(task.id) || task);
   }
 
   useEffect(() => {
@@ -874,6 +950,7 @@ export default function PmProjectBoard() {
                         <li key={item.id}>
                           <TaskCard
                             task={item}
+                            displayDate={today()}
                             updatingTaskId={updatingTaskId}
                             hidingTaskId={hidingTaskId}
                             isSelected={editingTaskId === item.id}
@@ -1099,6 +1176,7 @@ export default function PmProjectBoard() {
                                   <li key={task.id}>
                                     <TaskCard
                                       task={task}
+                                      displayDate={day}
                                       updatingTaskId={updatingTaskId}
                                       hidingTaskId={hidingTaskId}
                                       isSelected={editingTaskId === task.id}

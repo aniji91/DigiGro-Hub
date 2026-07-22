@@ -5429,6 +5429,11 @@
   background: #fef2f2;
 }
 
+.pm-day-task--carried {
+  border-color: #fdba74;
+  background: #fff7ed;
+}
+
 .pm-overdue-badge {
   display: inline-flex;
   align-items: center;
@@ -5440,6 +5445,27 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.03em;
+}
+
+.pm-carry-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.12rem 0.4rem;
+  border-radius: 999px;
+  background: #ffedd5;
+  color: #c2410c;
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.pm-task-carried-from {
+  display: block;
+  margin-top: 0.2rem;
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: #c2410c;
 }
 
 .pm-task-due {
